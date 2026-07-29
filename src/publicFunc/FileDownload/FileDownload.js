@@ -2,9 +2,15 @@ const FileDownload = async (e, fileName, originalFileName, fileTargets) => {
   e.preventDefault();
 
   try {
+    const token = localStorage.getItem("accessToken");
     const downloadUrl = `${process.env.REACT_APP_DB_HOST}/API/ITInfra/License/DownloadSoftwareFile?fileName=${encodeURIComponent(fileName)}&fileTargets=${fileTargets}`;
 
-    const response = await fetch(downloadUrl);
+    const response = await fetch(downloadUrl, {
+      method: "GET", // 다운로드이므로 일반적으로 GET 사용
+      headers: {
+        Authorization: `${token}`,
+      },
+    });
     if (!response.ok) throw new Error("서버 파일 다운로드 실패");
 
     const blob = await response.blob();
