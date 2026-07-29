@@ -83,13 +83,25 @@ export default function useInfrastructureSoftware() {
 
   const selectBaseSoftwareData = async () => {
     const result = await mainSoftwareSelectFetch();
+
     if (result && result.length > 0) {
       setSoftwareList(result);
-      // 포커싱 정합성 복구 보정
-      const currentSw =
-        result.find((item) => item.swCode === selectedSW?.swCode) || result[0];
-      setSelectedSW(currentSw);
-      setSelectedVersion(currentSw.versions?.[0] || null);
+
+      setSelectedSW((prevSW) => {
+        const currentSw =
+          result.find((item) => item.swCode === prevSW?.swCode) || result[0];
+
+        setSelectedVersion((prevVersion) => {
+          const currentVersion =
+            currentSw.versions?.find((v) => v.id === prevVersion?.id) ||
+            currentSw.versions?.[0] ||
+            null;
+
+          return currentVersion;
+        });
+
+        return currentSw;
+      });
     }
   };
 
@@ -144,7 +156,7 @@ export default function useInfrastructureSoftware() {
       USER: `임직원 [${data.departmentName} ${data.fullName} ${data.titleName}]의 라이선스 할당을 회수(만료) 처리하시겠습니까?`,
       PURCHASE: `[${data.contractName}] 라이선스 취득 계약 건을 영구 파기하시겠습니까?\n파기 시 보유 수량에서 [-${data.licenseCount} Copy]가 전산 제외됩니다.`,
     };
-    console.log(data);
+
     if (window.confirm(messages[dataType])) {
       if (dataType === "FILE") {
         await deleteSoftwareFileFetch(data);

@@ -4,7 +4,6 @@ import styled from "styled-components";
 import { theme } from "../../../../Style/MainStyle";
 
 const UserInfo = ({ selectedAsset }) => {
-  console.log(selectedAsset);
   return (
     <InfoCard>
       <div className="item">

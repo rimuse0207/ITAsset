@@ -13,12 +13,10 @@ export default function useSoftwareForm({
   // ⚙️ useSoftwareForm.js 내부 useEffect 구역 수정
 
   useEffect(() => {
-    console.log("targetSW", targetSW, mode);
     if (!isOpen) return;
-    console.log("ADJAKLSDJK");
+
     // 상황 1: 배포 버전 정보 수정 모드일 때
     if (mode === "VER_EDIT" && targetSW?.versions?.[0]) {
-      console.log("ADJAKLSDJK123123");
       const currentVersion = targetSW.versions[0];
       setFormData({
         versionStr: currentVersion.versionStr || "",
@@ -29,7 +27,6 @@ export default function useSoftwareForm({
     }
     // 상황 2: 소프트웨어 제품 마스터 정보 수정 모드일 때
     else if (mode === "SW_EDIT" && targetSW) {
-      console.log(targetSW);
       setFormData({
         swCode: targetSW.swCode || "",
         swName: targetSW.swName || "",
@@ -39,7 +36,6 @@ export default function useSoftwareForm({
         isLicenseRequired: targetSW.isLicenseRequired !== false,
       });
     } else {
-      console.log("ADJAKLSDJK12381238");
       setFormData(initialFormState);
     }
 

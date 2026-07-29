@@ -12,6 +12,7 @@ import InfrastructureAssets from "../pages/Home/HardWare/InfrastructureAssets";
 import InfrastructureSoftware from "../pages/Home/SoftWare/InfrastructureSoftware";
 import { useSelector } from "react-redux";
 import HelpDeskManage from "../pages/Home/HelpDesk/HelpDeskManage";
+import EveryOnePublicTicket from "../pages/Home/HelpDesk/EveryOne/EveryOnePublicTicket";
 
 const RouterMainPage = () => {
   const User_Info = useSelector(
@@ -36,12 +37,18 @@ const RouterMainPage = () => {
       withAuthorization: false,
       withAdminAuthorization: false,
     },
-    // {
-    //   path: "/helpdesk",
-    //   element: <HelpDeskManage></HelpDeskManage>,
-    //   withAuthorization: false,
-    //   withAdminAuthorization: false,
-    // },
+    {
+      path: "/helpdesk",
+      element: <HelpDeskManage></HelpDeskManage>,
+      withAuthorization: false,
+      withAdminAuthorization: false,
+    },
+    {
+      path: "/open/User/IT/HelpDesk",
+      element: <EveryOnePublicTicket></EveryOnePublicTicket>,
+      withAuthorization: false,
+      withAdminAuthorization: false,
+    },
 
     {
       path: "*",

@@ -9,7 +9,7 @@ const useSelectUser = () => {
 
   const getUserOptions = async () => {
     const result = await Request_Get_Axios("/Asset/User");
-    console.log(result);
+
     if (result.status) setSelectUserOption(result.data);
   };
   return { selectUserOption };

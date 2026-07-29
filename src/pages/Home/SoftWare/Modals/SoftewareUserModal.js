@@ -168,6 +168,7 @@ export default function SoftwareUserModal({
                       paddingRight: "40px",
                       fontFamily: "monospace",
                       fontWeight: "600",
+                      zIndex: "99",
                     }}
                   />
                   <SearchIconBtn type="button">

@@ -64,7 +64,6 @@ const LicenseListPannel = ({
               </CardMeta>
 
               {isLicenseRequired ? (
-                // 시나리오 A: 유료 상용 정품 소프트웨어 (수량 한도 엄격 제어 및 그래프 표출)
                 <LicenseProgressZone>
                   <div className="progress-labels">
                     <span>라이선스 사용 현황</span>
@@ -84,7 +83,6 @@ const LicenseListPannel = ({
                   </ProgressBar>
                 </LicenseProgressZone>
               ) : (
-                // 시나리오 B: 무료 / 오픈소스 프리웨어 (무제한 할당 전용 틸 배너 표출)
                 <FreeSoftwareBadgeBarZone>
                   <Globe size={12} className="free-icon" />
                   <span className="free-text">

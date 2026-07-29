@@ -22,7 +22,7 @@ export default function useAssetManagement(initialAssets = []) {
   const GettingAssetData = async () => {
     try {
       const GettingAssetData = await Request_Get_Axios("/Asset/Select");
-      console.log(GettingAssetData);
+
       if (GettingAssetData.status) setAssets(GettingAssetData.data);
     } catch (error) {
       console.log(error);

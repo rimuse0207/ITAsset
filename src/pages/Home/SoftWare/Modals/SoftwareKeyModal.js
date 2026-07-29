@@ -129,7 +129,7 @@ export default function SoftwareKeyModal({
                 <M.TextArea
                   rows={2}
                   name="description"
-                  placeholder="예: 디자인팀 전용 구독 갱신 건, 2027년 만료 예정 등"
+                  placeholder="예: 2027년 만료 예정 등"
                   value={formData.description}
                   onChange={handleInputChange}
                 />

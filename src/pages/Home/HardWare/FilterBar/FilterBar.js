@@ -55,7 +55,7 @@ const FilterBar = ({
             onClick={onResetAdvanced}
             title="고급 필터 조건 초기화"
           >
-            <RotateCcw size={12} /> 상속 초기화
+            <RotateCcw size={12} /> 전체 초기화
           </ResetAdvancedBadge>
         )}
       </RightControlBoxGrid>

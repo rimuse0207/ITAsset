@@ -10,12 +10,16 @@ import {
 } from "lucide-react";
 import { theme } from "../Home/Style/MainStyle";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 /**
  * @param {string} currentMenu - 현재 페이지 위치를 기반으로 활성화 배지를 켜줄 메뉴 ID ('Home' | 'Software' | 'Helpdesk')
  */
 export default function MainSidebar({ currentMenu }) {
   const navigate = useNavigate();
+  const LoginInfo = useSelector(
+    (state) => state.Login_Info_Reducer_State.Login_Info,
+  );
 
   // 🧭 메뉴 식별자(id)와 브라우저 주소창 주소(path)를 명확하게 분리 정의
   const menuItems = [
@@ -31,12 +35,12 @@ export default function MainSidebar({ currentMenu }) {
       path: "/software",
       icon: <Shield size={18} />,
     },
-    // {
-    //   id: "helpdesk",
-    //   label: "HelpDesk 이력 관리",
-    //   path: "/helpdesk",
-    //   icon: <Headphones size={18} />,
-    // },
+    {
+      id: "helpdesk",
+      label: "HelpDesk 이력 관리",
+      path: "/helpdesk",
+      icon: <Headphones size={18} />,
+    },
   ];
 
   return (
@@ -80,8 +84,10 @@ export default function MainSidebar({ currentMenu }) {
             <User size={16} style={{ color: theme.colors.primary }} />
           </AvatarWrapper>
           <AdminInfo>
-            <AdminName>최 관리자</AdminName>
-            <AdminRole>System Admin</AdminRole>
+            <AdminName>
+              {LoginInfo?.name} {LoginInfo?.position}
+            </AdminName>
+            <AdminRole>{LoginInfo?.team}</AdminRole>
           </AdminInfo>
           <SettingsButton title="시스템 설정">
             <Settings size={16} />

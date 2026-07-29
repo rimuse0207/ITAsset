@@ -130,12 +130,6 @@ export default function InfrastructureSoftware() {
             targetVersion={selectedVersion}
             targetKey={modalTargetData}
             onSave={async (payload) => {
-              console.log(
-                "키 세션 싱크:",
-                payload,
-                selectedSW,
-                selectedVersion,
-              );
               if (activeModal === "KEY_REG") {
                 await addLicenseKeyFetch(
                   payload,

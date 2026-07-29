@@ -17,26 +17,6 @@ import UserAssignmentModal from "./Modals/UserAssignmentModal";
 import AssetStatusModal from "./Modals/AssetStatusModal";
 
 export default function InfrastructureAssets() {
-  // const initialData = [
-  //   {
-  //     id: "AST-2026-001",
-  //     deviceType: "PC", // 🚀 RDB 매핑을 위한 기종 분류 플래그 주입
-  //     name: 'MacBook Pro 16"',
-  //     category: "데스크탑/노트북",
-  //     serial: "C02F1234MD6M",
-  //     status: "사용중",
-  //     user: "홍길동 (개발본부)",
-  //     date: "2025-03-12",
-  //     specCpu: "M3 Max",
-  //     specRam: "32GB",
-  //     specStorage: "1TB SSD",
-  //     memo: "개발본부 메인 장비",
-  //     softwares: [],
-  //     repairHistories: [],
-  //     softwareIssues: [],
-  //   },
-  // ];
-
   const {
     assets,
     selectedAsset,

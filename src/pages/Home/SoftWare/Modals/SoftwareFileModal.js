@@ -64,7 +64,7 @@ export default function SoftwareFileModal({
   const handleSaveFile = async (e, data) => {
     e.preventDefault();
     const submitFormData = new FormData();
-    console.log(data, credMode);
+
     submitFormData.append("osType", data.osType);
     submitFormData.append("fileName", data.fileName);
     submitFormData.append("fileSize", data.fileSize);
@@ -72,12 +72,10 @@ export default function SoftwareFileModal({
     submitFormData.append("versionId", targetVersion?.id || "");
 
     if (credMode === "edit" && targetFile?.id) {
-      console.log("DADADAD");
       submitFormData.append("fileId", targetFile.id);
     }
 
     if (data.fileObject) {
-      console.log("????");
       // Case A: 사용자가 새 파일을 드롭하거나 첨부하여 변경 정보가 존재할 때
       submitFormData.append("softwareFiles", data.fileObject);
       submitFormData.append("isFileChanged", "true"); // 백엔드 분기용 힌트 플래그
@@ -85,7 +83,7 @@ export default function SoftwareFileModal({
 
     if (!data.fileObject && credMode === "edit") {
       alert("파일이 변경 된 항목이 없습니다.");
-      console.log("여기가 왜 실행이 안되?");
+
       return;
     }
     onSave(submitFormData);

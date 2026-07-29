@@ -166,13 +166,6 @@ const LoginMainPage = () => {
     email: localStorage.getItem("userId") ? localStorage.getItem("userId") : "",
     password: "",
   });
-  const [Change_password, setChange_password] = useState({
-    email: "",
-    password: "",
-    passwordCheck: "",
-  });
-
-  const [PasswordChangeStatus, setPasswordChangeStatus] = useState(false);
 
   useEffect(() => {
     before_Login_Checkig();
@@ -214,16 +207,7 @@ const LoginMainPage = () => {
 
     if (!Login_Check.data.dataSuccess) {
       alert("아이디 또는 비밀번호가 틀립니다.");
-      return;
-    }
-
-    if (Login_Check.data.PasswordChange) {
-      alert("비밀번호 변경 이후 사용 가능합니다.");
-      setChange_password({
-        ...Change_password,
-        email: LoginDataInfo.email,
-      });
-      setPasswordChangeStatus(true);
+      setLoginDataInfo({ ...LoginDataInfo, password: "" });
       return;
     }
 
@@ -243,7 +227,7 @@ const LoginMainPage = () => {
         }),
       );
 
-      return Navigate("/Home");
+      return Navigate("/asset");
     } else {
       setLoginDataInfo({
         ...LoginDataInfo,
@@ -251,68 +235,6 @@ const LoginMainPage = () => {
       });
       alert("아이디 또는 비밀번호가 틀립니다.");
       return;
-    }
-  };
-
-  // 비밀번호 변경 API
-  const HandleChangePassword = async (e) => {
-    e.preventDefault();
-    const passwordValidChecking = PasswordValidCheck(
-      Change_password.password,
-      Change_password.passwordCheck,
-    );
-    if (passwordValidChecking?.passwordLength) {
-      setChange_password({
-        ...Change_password,
-        password: "",
-        passwordCheck: "",
-      });
-      toast.show({
-        title: `비밀번호는 4자리 이상으로 설정 해 주세요.`,
-        successCheck: false,
-        duration: 3000,
-      });
-      return;
-    } else if (passwordValidChecking?.passwordDifferent) {
-      toast.show({
-        title: `비밀번호가 서로 다릅니다.`,
-        successCheck: false,
-        duration: 3000,
-      });
-      return;
-    } else if (passwordValidChecking?.passspecifyTextIncludewordDifferent) {
-      toast.show({
-        title: `비밀번호에 ' , { , } 또는 \`는 사용할 수 없습니다.`,
-        successCheck: false,
-        duration: 3000,
-      });
-      return;
-    }
-
-    const Change_Password_Axios = await Request_Post_Axios(
-      "/Login/UserInitialPasswordPersonalPasswordChange",
-      Change_password,
-    );
-    if (Change_Password_Axios.status) {
-      // 비밀번호 변경 성공
-      setLoginDataInfo({ ...LoginDataInfo, password: "" });
-      setPasswordChangeStatus(false);
-      setChange_password({
-        email: "",
-        password: "",
-        passwordCheck: "",
-      });
-      toast.show({
-        title: `비밀번호가 변경되었습니다.`,
-        successCheck: true,
-        duration: 3000,
-      });
-    } else {
-      toast.show({
-        title: `오류발생. DHKS_IT팀에 문의바랍니다.`,
-        successCheck: false,
-        duration: 3000,
-      });
     }
   };
 
@@ -326,19 +248,12 @@ const LoginMainPage = () => {
               <h1>IT자산관리 시스템</h1>
               <p>* IT자산관리 및 유지보수 내용</p>
             </div>
-            {PasswordChangeStatus ? (
-              <PasswordChangeContent
-                Change_password={Change_password}
-                setChange_password={(data) => setChange_password(data)}
-                HandleChangePassword={(e) => HandleChangePassword(e)}
-              ></PasswordChangeContent>
-            ) : (
-              <LoginContent
-                LoginDataInfo={LoginDataInfo}
-                setLoginDataInfo={(data) => setLoginDataInfo(data)}
-                handleClicksLogin={(data) => handleClicksLogin(data)}
-              ></LoginContent>
-            )}
+
+            <LoginContent
+              LoginDataInfo={LoginDataInfo}
+              setLoginDataInfo={(data) => setLoginDataInfo(data)}
+              handleClicksLogin={(data) => handleClicksLogin(data)}
+            ></LoginContent>
           </div>
         </div>
       </LoginMainPageDivBox>

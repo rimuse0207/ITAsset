@@ -99,16 +99,16 @@ export default function AssetFormModal({
     menu: (base) => ({
       ...base,
       fontSize: "12.5px",
-      zIndex: 9999, // 🚀 부모 스택을 완벽히 뚫고 나오도록 대폭 상향
+      zIndex: 9999,
     }),
 
     menuList: (base) => ({
       ...base,
-      zIndex: 9999, // 내부 리스트 레이어도 함께 상향
+      zIndex: 9999,
     }),
     menuPortal: (base) => ({
       ...base,
-      zIndex: 99999 /* document.body 밑에 생성되는 포탈 래퍼의 z-index를 강제 인젝션 */,
+      zIndex: 99999,
     }),
     option: (base, state) => ({
       ...base,
@@ -133,7 +133,7 @@ export default function AssetFormModal({
     >
       <div>
         <span className={`category-tag ${mode === "edit" ? "edit-mode" : ""}`}>
-          {mode === "edit" ? "Modify Mode" : "Bulk Entry Mode"}
+          {mode === "edit" ? "자산 수정" : "자산 신규 입고"}
         </span>
         <h2 style={{ fontSize: "18px", fontWeight: "700", marginTop: "4px" }}>
           {mode === "edit"
@@ -141,14 +141,6 @@ export default function AssetFormModal({
             : "대량 자산 일괄 입고 등록"}
         </h2>
       </div>
-      {/* {mode === "create" && (
-        <TemplateButton
-          type="button"
-          onClick={() => alert("기존 스펙 템플릿 로드")}
-        >
-          <Search size={14} /> 기존 등록 자산 불러오기
-        </TemplateButton>
-      )} */}
     </div>
   );
 
@@ -191,7 +183,7 @@ export default function AssetFormModal({
     <ModalLayout
       isOpen={isOpen}
       onClose={onClose}
-      maxWidth="850px"
+      maxWidth="1200px"
       titleZone={titleZone}
     >
       <M.StyledForm
@@ -386,6 +378,7 @@ export default function AssetFormModal({
                     ? "제조사 시리얼 (S/N) *"
                     : "IMEI*"}
               </div>
+              <div className="col-memo">ERP 자산코드</div>
               <div className="col-memo">자산 특이사항 (비고)</div>
               <div className="col-action">{mode === "create" && "제거"}</div>
             </M.BulkTableHeader>
@@ -438,6 +431,16 @@ export default function AssetFormModal({
                         handleRowChange(row.id, "serial", e.target.value)
                       }
                       required
+                    />
+                  </div>
+                  <div className="col-memo">
+                    <M.RowInput
+                      type="text"
+                      placeholder="예: PC0111"
+                      value={row.erpCode || ""}
+                      onChange={(e) =>
+                        handleRowChange(row.id, "erpCode", e.target.value)
+                      }
                     />
                   </div>
 
@@ -503,23 +506,6 @@ export default function AssetFormModal({
   );
 }
 
-const TemplateButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: 1px dashed #2563eb;
-  background: #eff6ff;
-  color: #2563eb;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-left: auto;
-  &:hover {
-    background-color: rgba(37, 99, 235, 0.15);
-  }
-`;
 const DeviceTypeTabSelector = styled.div`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -382,7 +382,7 @@ export const ModalContent = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
   width: 100%;
-  max-width: 520px;
+  max-width: 720px;
   background: ${() => theme.colors.white};
   border-radius: 20px;
   box-shadow: ${() => theme.shadows.modal};
