@@ -2,7 +2,7 @@ const FileDownload = async (e, fileName, originalFileName, fileTargets) => {
   e.preventDefault();
 
   try {
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem("Token");
     const downloadUrl = `${process.env.REACT_APP_DB_HOST}/API/ITInfra/License/DownloadSoftwareFile?fileName=${encodeURIComponent(fileName)}&fileTargets=${fileTargets}`;
 
     const response = await fetch(downloadUrl, {
