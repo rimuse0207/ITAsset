@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { theme } from "../../../Style/MainStyle";
 import SoftwareHeader from "../../Header/SoftwareHeader";
 import styled from "styled-components";

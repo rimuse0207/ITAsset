@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import {
   Key,
@@ -56,6 +56,7 @@ const LicenseKey = ({ selectedVersion, onAction }) => {
           </EmptyBufferZone>
         ) : (
           selectedVersion.licenseKeys.map((keyObj, kIdx) => {
+            console.log(keyObj);
             const isThisKeyRevealed = keyObj.viewUnlocked === true;
 
             return (

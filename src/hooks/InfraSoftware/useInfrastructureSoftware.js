@@ -192,24 +192,29 @@ export default function useInfrastructureSoftware() {
 
       const serverDecryptedKeyStr = response.data;
 
-      await selectBaseSoftwareData();
+      // await selectBaseSoftwareData();
+
+      if (!selectedVersion) return;
 
       setSelectedVersion((prevVersion) => {
-        if (!prevVersion) return null;
+        if (!prevVersion) return prevVersion;
 
-        return {
+        const updatedVersion = {
           ...prevVersion,
           licenseKeys: prevVersion.licenseKeys.map((keyObj) => {
-            if (keyObj.id === targetKey?.id) {
+            // targetKey와 ID가 일치하는 키만 업데이트
+            if (keyObj.softwareKeyId === targetKey?.softwareKeyId) {
               return {
                 ...keyObj,
                 keyStr: serverDecryptedKeyStr,
-                viewUnlocked: true,
+                viewUnlocked: true, // 복호화 완료 플래그 활성화
               };
             }
             return keyObj;
           }),
         };
+
+        return updatedVersion;
       });
 
       return true;
