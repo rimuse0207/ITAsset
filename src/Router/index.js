@@ -13,6 +13,7 @@ import InfrastructureSoftware from "../pages/Home/SoftWare/InfrastructureSoftwar
 import { useSelector } from "react-redux";
 import HelpDeskManage from "../pages/Home/HelpDesk/HelpDeskManage";
 import EveryOnePublicTicket from "../pages/Home/HelpDesk/EveryOne/EveryOnePublicTicket";
+import ConsumablesManagement from "../pages/Home/Consumables/ConsumablesManagement";
 
 const RouterMainPage = () => {
   const User_Info = useSelector(
@@ -40,6 +41,12 @@ const RouterMainPage = () => {
     {
       path: "/helpdesk",
       element: <HelpDeskManage></HelpDeskManage>,
+      withAuthorization: false,
+      withAdminAuthorization: false,
+    },
+    {
+      path: "/consumable",
+      element: <ConsumablesManagement></ConsumablesManagement>,
       withAuthorization: false,
       withAdminAuthorization: false,
     },

@@ -7,27 +7,30 @@ import {
   Settings,
   LogOut,
   Terminal,
+  ShoppingBasket,
 } from "lucide-react";
 import { theme } from "../Home/Style/MainStyle";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
-/**
- * @param {string} currentMenu - 현재 페이지 위치를 기반으로 활성화 배지를 켜줄 메뉴 ID ('Home' | 'Software' | 'Helpdesk')
- */
 export default function MainSidebar({ currentMenu }) {
   const navigate = useNavigate();
   const LoginInfo = useSelector(
     (state) => state.Login_Info_Reducer_State.Login_Info,
   );
 
-  // 🧭 메뉴 식별자(id)와 브라우저 주소창 주소(path)를 명확하게 분리 정의
   const menuItems = [
     {
       id: "asset",
       label: "IT 자산 관리",
       path: "/asset",
       icon: <Monitor size={18} />,
+    },
+    {
+      id: "consumable",
+      label: "IT 소모품 관리",
+      path: "/consumable",
+      icon: <ShoppingBasket size={18} />,
     },
     {
       id: "software",
@@ -45,7 +48,6 @@ export default function MainSidebar({ currentMenu }) {
 
   return (
     <SidebarContainer>
-      {/* 1️⃣ 상단 브랜드 로고 섹션 */}
       <LogoZone>
         <LogoIconWrapper>
           <Terminal size={20} />
@@ -56,7 +58,6 @@ export default function MainSidebar({ currentMenu }) {
         </div>
       </LogoZone>
 
-      {/* 2️⃣ 중간 메뉴 아이템 링크 트리 */}
       <MenuNavigation>
         <MenuSectionTitle>Core Console</MenuSectionTitle>
         {menuItems.map((item) => {
@@ -65,9 +66,7 @@ export default function MainSidebar({ currentMenu }) {
             <MenuItem
               key={item.id}
               isActive={isActive}
-              onClick={() =>
-                navigate(item.path)
-              } /* 🚀 아이템에 지정된 실제 URL path 주소로 이동 */
+              onClick={() => navigate(item.path)}
             >
               <IconWrapper isActive={isActive}>{item.icon}</IconWrapper>
               <MenuLabel isActive={isActive}>{item.label}</MenuLabel>
@@ -77,7 +76,6 @@ export default function MainSidebar({ currentMenu }) {
         })}
       </MenuNavigation>
 
-      {/* 3️⃣ 하단 접속 관리자 세션 프로필 및 유틸리티 */}
       <SidebarFooter>
         <AdminProfileCard>
           <AvatarWrapper>
@@ -103,7 +101,6 @@ export default function MainSidebar({ currentMenu }) {
   );
 }
 
-// 👤 프로필 전용 인라인 임포트 대체 컴포넌트
 function User({ size, style }) {
   return (
     <svg

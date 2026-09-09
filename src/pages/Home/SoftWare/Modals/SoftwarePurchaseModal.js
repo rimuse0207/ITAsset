@@ -202,7 +202,7 @@ export default function SoftwarePurchaseModal({
 }
 
 /* ─── 🎨 대시보드 핏 업로드 컴포넌트 전용 스타일 ─── */
-const UploadDropZone = styled.div`
+export const UploadDropZone = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -236,7 +236,7 @@ const UploadDropZone = styled.div`
   }
 `;
 
-const FileActiveBarZone = styled.div`
+export const FileActiveBarZone = styled.div`
   display: flex;
   align-items: center;
   padding: 0 12px;

@@ -1,0 +1,285 @@
+import React from "react";
+import styled from "styled-components";
+
+import { Users, FileText, Plus, Paperclip, Edit3, Trash2 } from "lucide-react";
+import SoftwareHeader from "../../SoftWare/Header/SoftwareHeader";
+import { theme } from "../../Style/MainStyle";
+
+export default function ConsumableContentPanel({ selectedItem, onAction }) {
+  if (!selectedItem)
+    return <EmptyZone>목록에서 소모품을 선택해주세요.</EmptyZone>;
+
+  return (
+    <RightPanel>
+      <SoftwareHeader
+        title={selectedItem.name}
+        subTitle={"소모품 재고 및 지급 현황 관리"}
+        isButton={false}
+      />
+
+      <DetailScrollZone>
+        {/* 구역 1: 사용자 지급 내역 */}
+        <SectionBlock>
+          <SectionHeaderZone>
+            <SectionTitle>
+              <Users size={16} /> 실사용자 지급 내역
+            </SectionTitle>
+            <SectionAddButton
+              onClick={() => onAction("ISSUE_TO_USER", selectedItem)}
+            >
+              <Plus size={12} /> 사용자 지급 등록
+            </SectionAddButton>
+          </SectionHeaderZone>
+
+          <TableContainer>
+            <PlaceholderTable>
+              <thead>
+                <tr>
+                  <th>지급 일자</th>
+                  <th>사번/이름</th>
+                  <th>부서</th>
+                  <th>수량</th>
+                  <th>비고</th>
+                  <th style={{ width: "70px", textAlign: "center" }}>
+                    관리
+                  </th>{" "}
+                  {/* 🚀 관리 컬럼 추가 */}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-09-08</td>
+                  <td>홍길동</td>
+                  <td>인프라팀</td>
+                  <td>1</td>
+                  <td>신규 입사자 지급</td>
+                  <td>
+                    {/* 🚀 인라인 액션 버튼 */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <TableActionButton
+                        type="button"
+                        onClick={() => onAction("EDIT_ISSUE", { id: "I01" })}
+                      >
+                        <Edit3 size={13} />
+                      </TableActionButton>
+                      <TableActionButton
+                        className="danger"
+                        type="button"
+                        onClick={() => onAction("DELETE_ISSUE", { id: "I01" })}
+                      >
+                        <Trash2 size={13} />
+                      </TableActionButton>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </PlaceholderTable>
+          </TableContainer>
+        </SectionBlock>
+
+        {/* 구역 2: 구매 및 입고 (결재 내역 첨부) */}
+        <SectionBlock>
+          <SectionHeaderZone>
+            <SectionTitle>
+              <FileText size={16} /> 구매 및 입고 내역
+            </SectionTitle>
+            <SectionAddButton
+              onClick={() => onAction("REGISTER_PURCHASE", selectedItem)}
+            >
+              <Plus size={12} /> 입고/결재 등록
+            </SectionAddButton>
+          </SectionHeaderZone>
+
+          <TableContainer>
+            <PlaceholderTable>
+              <thead>
+                <tr>
+                  <th>입고 일자</th>
+                  <th>구매 수량</th>
+                  <th>단가</th>
+                  <th>결재 번호 / 첨부파일</th>
+                  <th>비고</th>
+                  <th style={{ width: "70px", textAlign: "center" }}>
+                    관리
+                  </th>{" "}
+                  {/* 🚀 관리 컬럼 추가 */}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-09-01</td>
+                  <td>+10</td>
+                  <td style={{ fontWeight: 600 }}>₩ 120,000</td>
+                  <td className="file-link">
+                    <Paperclip size={12} /> DHK-BUY-20260901.pdf
+                  </td>
+                  <td style={{ color: "#64748b" }}>
+                    신규 입사자 대비 여유분 추가 확보
+                  </td>
+                  <td>
+                    {/* 🚀 인라인 액션 버튼 */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <TableActionButton
+                        type="button"
+                        onClick={() => onAction("EDIT_PURCHASE", { id: "P01" })}
+                      >
+                        <Edit3 size={13} />
+                      </TableActionButton>
+                      <TableActionButton
+                        className="danger"
+                        type="button"
+                        onClick={() =>
+                          onAction("DELETE_PURCHASE", { id: "P01" })
+                        }
+                      >
+                        <Trash2 size={13} />
+                      </TableActionButton>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </PlaceholderTable>
+          </TableContainer>
+        </SectionBlock>
+      </DetailScrollZone>
+    </RightPanel>
+  );
+}
+
+const TableActionButton = styled.button`
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border: 1px solid ${() => theme.colors.border};
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: ${() => theme.colors.textSub};
+  transition: all 0.15s;
+  &:hover {
+    border-color: ${() => theme.colors.primary};
+    color: ${() => theme.colors.primary};
+    background: ${() => theme.colors.primaryLight};
+  }
+  &.danger:hover {
+    border-color: ${() => theme.colors.error};
+    color: ${() => theme.colors.error};
+    background: ${() => theme.colors.errorBg};
+  }
+`;
+
+// 기존 스타일 ...
+const RightPanel = styled.div`
+  flex: 1;
+  background: ${() => theme.colors.white};
+  display: flex;
+  flex-direction: column;
+`;
+const EmptyZone = styled.div`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: ${() => theme.colors.textMuted};
+  background: ${() => theme.colors.bg};
+`;
+const DetailScrollZone = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+`;
+const SectionBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+const SectionHeaderZone = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+`;
+const SectionTitle = styled.h3`
+  font-size: 15px;
+  font-weight: 700;
+  color: ${() => theme.colors.textMain};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+`;
+const SectionAddButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid ${() => theme.colors.border};
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: ${() => theme.colors.textSub};
+  cursor: pointer;
+  transition: all 0.15s ease;
+  &:hover {
+    border-color: ${() => theme.colors.primary};
+    color: ${() => theme.colors.primary};
+    background: ${() => theme.colors.primaryLight};
+  }
+`;
+const TableContainer = styled.div`
+  border: 1px solid ${() => theme.colors.borderLight};
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: ${() => theme.shadows.card};
+  background: #fff;
+`;
+const PlaceholderTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+  th {
+    background: ${() => theme.colors.bg};
+    padding: 12px 16px;
+    font-weight: 600;
+    color: ${() => theme.colors.textSub};
+    border-bottom: 1px solid ${() => theme.colors.borderLight};
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid ${() => theme.colors.borderLight};
+    color: ${() => theme.colors.textMain};
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  .file-link {
+    color: ${() => theme.colors.primary};
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
