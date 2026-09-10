@@ -7,8 +7,8 @@ import {
   FileActiveBarZone,
   UploadDropZone,
 } from "../../SoftWare/Modals/SoftwarePurchaseModal";
+import moment from "moment/moment";
 
-// 🚀 mode와 targetHistory Props 추가
 export default function ConsumablePurchaseModal({
   isOpen,
   onClose,
@@ -17,8 +17,6 @@ export default function ConsumablePurchaseModal({
   mode = "create",
   targetHistory,
 }) {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const fileInputRef = useRef(null);
   const getTodayString = () => new Date().toISOString().split("T")[0];
 
   const [formData, setFormData] = useState({
@@ -28,17 +26,25 @@ export default function ConsumablePurchaseModal({
     logMemo: "",
   });
 
-  // 🚀 수정 모드 시 기존 데이터 세팅
+  const [selectedFile, setSelectedFile] = useState(null); // 새로 첨부한 파일
+  const [existingFile, setExistingFile] = useState(null); // 기존 첨부 파일명
+  const [isDeleted, setIsDeleted] = useState(false); // 삭제 여부 플래그
+
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     if (isOpen) {
       if (mode === "edit" && targetHistory) {
         setFormData({
+          purchaseId: targetHistory.purchaseId || targetHistory.id,
           restockCount: targetHistory.restockCount || "",
           purchaseDate: targetHistory.purchaseDate || getTodayString(),
           unitPrice: targetHistory.unitPrice || "",
           logMemo: targetHistory.logMemo || "",
         });
-        setSelectedFile(null); // 기존 첨부파일 표기는 별도 처리 필요
+        setSelectedFile(null);
+        setExistingFile(targetHistory.originalFileName || null);
+        setIsDeleted(false);
       } else {
         setFormData({
           restockCount: "",
@@ -47,6 +53,8 @@ export default function ConsumablePurchaseModal({
           logMemo: "",
         });
         setSelectedFile(null);
+        setExistingFile(null);
+        setIsDeleted(false);
       }
     }
   }, [isOpen, mode, targetHistory]);
@@ -57,12 +65,27 @@ export default function ConsumablePurchaseModal({
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) setSelectedFile(e.target.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      setIsDeleted(false);
+    }
   };
+
   const handleDrop = (e) => {
     e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0])
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setSelectedFile(e.dataTransfer.files[0]);
+      setIsDeleted(false);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    if (selectedFile) {
+      setSelectedFile(null);
+    } else if (existingFile) {
+      setExistingFile(null);
+      setIsDeleted(true);
+    }
   };
 
   const handleFormSubmit = (e) => {
@@ -70,8 +93,10 @@ export default function ConsumablePurchaseModal({
     if (!formData.restockCount) return;
 
     const multipartFormData = new FormData();
-    if (mode === "edit")
-      multipartFormData.append("purchaseId", targetHistory.id); // 수정 시 ID 첨부
+    if (mode === "edit" && formData.purchaseId) {
+      multipartFormData.append("purchaseId", formData.purchaseId);
+    }
+
     multipartFormData.append("consumableId", targetItem?.id);
     multipartFormData.append("purchaseDate", formData.purchaseDate);
     multipartFormData.append("restockCount", Number(formData.restockCount));
@@ -79,8 +104,11 @@ export default function ConsumablePurchaseModal({
     multipartFormData.append("logMemo", formData.logMemo);
 
     if (selectedFile) {
+      multipartFormData.append("isChanged", "true");
       multipartFormData.append("originalFileName", selectedFile.name);
-      multipartFormData.append("purchaseProof", selectedFile);
+      multipartFormData.append("consumablePurchase", selectedFile);
+    } else if (isDeleted) {
+      multipartFormData.append("isDeleted", "true");
     }
 
     onSave(multipartFormData);
@@ -112,6 +140,8 @@ export default function ConsumablePurchaseModal({
     </div>
   );
 
+  const hasDisplayFile = selectedFile || (existingFile && !isDeleted);
+
   return (
     <ModalLayout isOpen={isOpen} onClose={onClose} titleZone={titleZone}>
       <M.StyledForm onSubmit={handleFormSubmit}>
@@ -122,7 +152,7 @@ export default function ConsumablePurchaseModal({
               <M.Input
                 type="date"
                 name="purchaseDate"
-                value={formData.purchaseDate}
+                value={moment(formData.purchaseDate).format("YYYY-MM-DD")}
                 onChange={handleInputChange}
                 required
               />
@@ -170,7 +200,8 @@ export default function ConsumablePurchaseModal({
                 style={{ display: "none" }}
                 accept=".pdf, .png, .jpg, .jpeg"
               />
-              {!selectedFile ? (
+
+              {!hasDisplayFile ? (
                 <UploadDropZone
                   onDrop={handleDrop}
                   onDragOver={(e) => e.preventDefault()}
@@ -185,11 +216,13 @@ export default function ConsumablePurchaseModal({
               ) : (
                 <FileActiveBarZone>
                   <File size={14} className="file-icon" />
-                  <span className="file-name">{selectedFile.name}</span>
+                  <span className="file-name">
+                    {selectedFile ? selectedFile.name : existingFile}
+                  </span>
                   <button
                     type="button"
                     className="clear-btn"
-                    onClick={() => setSelectedFile(null)}
+                    onClick={handleRemoveFile}
                   >
                     <X size={12} />
                   </button>

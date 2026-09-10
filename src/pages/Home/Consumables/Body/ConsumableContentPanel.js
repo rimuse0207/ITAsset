@@ -4,8 +4,14 @@ import styled from "styled-components";
 import { Users, FileText, Plus, Paperclip, Edit3, Trash2 } from "lucide-react";
 import SoftwareHeader from "../../SoftWare/Header/SoftwareHeader";
 import { theme } from "../../Style/MainStyle";
+import moment from "moment/moment";
 
-export default function ConsumableContentPanel({ selectedItem, onAction }) {
+export default function ConsumableContentPanel({
+  selectedItem,
+  onAction,
+  userUsedList,
+  purchaseList,
+}) {
   if (!selectedItem)
     return <EmptyZone>목록에서 소모품을 선택해주세요.</EmptyZone>;
 
@@ -36,48 +42,51 @@ export default function ConsumableContentPanel({ selectedItem, onAction }) {
               <thead>
                 <tr>
                   <th>지급 일자</th>
-                  <th>사번/이름</th>
-                  <th>부서</th>
+                  <th>지급자</th>
                   <th>수량</th>
                   <th>비고</th>
                   <th style={{ width: "70px", textAlign: "center" }}>
                     관리
                   </th>{" "}
-                  {/* 🚀 관리 컬럼 추가 */}
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>2026-09-08</td>
-                  <td>홍길동</td>
-                  <td>인프라팀</td>
-                  <td>1</td>
-                  <td>신규 입사자 지급</td>
-                  <td>
-                    {/* 🚀 인라인 액션 버튼 */}
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "6px",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <TableActionButton
-                        type="button"
-                        onClick={() => onAction("EDIT_ISSUE", { id: "I01" })}
-                      >
-                        <Edit3 size={13} />
-                      </TableActionButton>
-                      <TableActionButton
-                        className="danger"
-                        type="button"
-                        onClick={() => onAction("DELETE_ISSUE", { id: "I01" })}
-                      >
-                        <Trash2 size={13} />
-                      </TableActionButton>
-                    </div>
-                  </td>
-                </tr>
+                {userUsedList.map((list) => {
+                  return (
+                    <tr key={list.id}>
+                      <td>{moment(list.issueDate).format("YY년 MM월 DD일")}</td>
+                      <td>
+                        {list.departmentName} {list.fullName} {list.titleName}
+                      </td>
+
+                      <td>{list.issueCount}</td>
+                      <td>{list.memo}</td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "6px",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <TableActionButton
+                            type="button"
+                            onClick={() => onAction("EDIT_ISSUE", list)}
+                          >
+                            <Edit3 size={13} />
+                          </TableActionButton>
+                          <TableActionButton
+                            className="danger"
+                            type="button"
+                            onClick={() => onAction("DELETE_ISSUE", list)}
+                          >
+                            <Trash2 size={13} />
+                          </TableActionButton>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </PlaceholderTable>
           </TableContainer>
@@ -92,7 +101,7 @@ export default function ConsumableContentPanel({ selectedItem, onAction }) {
             <SectionAddButton
               onClick={() => onAction("REGISTER_PURCHASE", selectedItem)}
             >
-              <Plus size={12} /> 입고/결재 등록
+              <Plus size={12} /> 입고/품의 등록
             </SectionAddButton>
           </SectionHeaderZone>
 
@@ -103,52 +112,60 @@ export default function ConsumableContentPanel({ selectedItem, onAction }) {
                   <th>입고 일자</th>
                   <th>구매 수량</th>
                   <th>단가</th>
-                  <th>결재 번호 / 첨부파일</th>
+                  <th>결재 품의서 / 첨부파일</th>
                   <th>비고</th>
                   <th style={{ width: "70px", textAlign: "center" }}>
                     관리
                   </th>{" "}
-                  {/* 🚀 관리 컬럼 추가 */}
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>2026-09-01</td>
-                  <td>+10</td>
-                  <td style={{ fontWeight: 600 }}>₩ 120,000</td>
-                  <td className="file-link">
-                    <Paperclip size={12} /> DHK-BUY-20260901.pdf
-                  </td>
-                  <td style={{ color: "#64748b" }}>
-                    신규 입사자 대비 여유분 추가 확보
-                  </td>
-                  <td>
-                    {/* 🚀 인라인 액션 버튼 */}
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "6px",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <TableActionButton
-                        type="button"
-                        onClick={() => onAction("EDIT_PURCHASE", { id: "P01" })}
-                      >
-                        <Edit3 size={13} />
-                      </TableActionButton>
-                      <TableActionButton
-                        className="danger"
-                        type="button"
-                        onClick={() =>
-                          onAction("DELETE_PURCHASE", { id: "P01" })
-                        }
-                      >
-                        <Trash2 size={13} />
-                      </TableActionButton>
-                    </div>
-                  </td>
-                </tr>
+                {purchaseList.map((list) => {
+                  return (
+                    <tr key={list.purchaseId}>
+                      <td>
+                        {moment(list.purchaseDate).format("YY년 MM월 DD일")}
+                      </td>
+                      <td>{list.restockCount}</td>
+                      <td style={{ fontWeight: 600 }}>
+                        ₩ {list.unitPrice?.toLocaleString()}
+                      </td>
+                      <td className={list.originalFileName ? "file-link" : ""}>
+                        {list.originalFileName ? (
+                          <>
+                            <Paperclip size={12} /> {list.originalFileName}
+                          </>
+                        ) : (
+                          <></>
+                        )}
+                      </td>
+                      <td style={{ color: "#64748b" }}>{list.logMemo}</td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "6px",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <TableActionButton
+                            type="button"
+                            onClick={() => onAction("EDIT_PURCHASE", list)}
+                          >
+                            <Edit3 size={13} />
+                          </TableActionButton>
+                          <TableActionButton
+                            className="danger"
+                            type="button"
+                            onClick={() => onAction("DELETE_PURCHASE", list)}
+                          >
+                            <Trash2 size={13} />
+                          </TableActionButton>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </PlaceholderTable>
           </TableContainer>
@@ -182,7 +199,6 @@ const TableActionButton = styled.button`
   }
 `;
 
-// 기존 스타일 ...
 const RightPanel = styled.div`
   flex: 1;
   background: ${() => theme.colors.white};

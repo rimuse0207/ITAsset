@@ -20,25 +20,38 @@ export default function ConsumableFormModal({
   onSave,
 }) {
   const [formData, setFormData] = useState({
+    id: "",
     name: "",
     category: "PC 주변기기",
     itemType: "",
   });
+
   const [selectedImage, setSelectedImage] = useState(null);
+  const [existingImage, setExistingImage] = useState(null);
+  const [isImageDeleted, setIsImageDeleted] = useState(false);
+
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       if (mode === "edit" && targetItem) {
         setFormData({
+          id: targetItem.id || "",
           name: targetItem.name || "",
           category: targetItem.category || "PC 주변기기",
           itemType: targetItem.itemType || "",
         });
         setSelectedImage(null);
+
+        setExistingImage(
+          targetItem.imageUrl || targetItem.thumbnailUrl || null,
+        );
+        setIsImageDeleted(false);
       } else {
         setFormData({ name: "", category: "PC 주변기기", itemType: "" });
         setSelectedImage(null);
+        setExistingImage(null);
+        setIsImageDeleted(false);
       }
     }
   }, [isOpen, mode, targetItem]);
@@ -49,23 +62,43 @@ export default function ConsumableFormModal({
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0])
+    if (e.target.files && e.target.files[0]) {
       setSelectedImage(e.target.files[0]);
+      setIsImageDeleted(false);
+    }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0])
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setSelectedImage(e.dataTransfer.files[0]);
+      setIsImageDeleted(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (selectedImage) {
+      setSelectedImage(null);
+    } else if (existingImage) {
+      setExistingImage(null);
+      setIsImageDeleted(true);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const payload = new FormData();
+    payload.append("id", formData.id);
     payload.append("name", formData.name);
     payload.append("category", formData.category);
     payload.append("itemType", formData.itemType);
-    if (selectedImage) payload.append("thumbnail", selectedImage);
+
+    if (selectedImage) {
+      payload.append("consumableImage", selectedImage);
+      payload.append("isImageChanged", "true");
+    } else if (isImageDeleted) {
+      payload.append("isImageDeleted", "true");
+    }
 
     onSave(payload);
   };
@@ -81,12 +114,14 @@ export default function ConsumableFormModal({
     </div>
   );
 
+  const hasDisplayImage = selectedImage || (existingImage && !isImageDeleted);
+
   return (
     <ModalLayout
       isOpen={isOpen}
-      onClose={onClose}
       maxWidth="500px"
       titleZone={titleZone}
+      onClose={onClose}
     >
       <M.StyledForm onSubmit={handleSubmit}>
         <M.ModalBody style={{ padding: "28px" }}>
@@ -121,7 +156,6 @@ export default function ConsumableFormModal({
                 </M.Select>
               </M.InputGroup>
 
-              {/* 🚀 수정됨: 안전재고 삭제, 세부 품목 직접 작성란 추가 */}
               <M.InputGroup>
                 <M.SectionLabel>
                   세부 품목 <span className="required">*</span>
@@ -148,7 +182,7 @@ export default function ConsumableFormModal({
               style={{ display: "none" }}
               accept="image/*"
             />
-            {!selectedImage ? (
+            {!hasDisplayImage ? (
               <UploadDropZone
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
@@ -161,14 +195,27 @@ export default function ConsumableFormModal({
               </UploadDropZone>
             ) : (
               <FileActiveBarZone>
-                <ImageIcon size={14} className="file-icon" />
-                <span className="file-name">{selectedImage.name}</span>
+                {existingImage && !selectedImage ? (
+                  <img
+                    src={`${process.env.REACT_APP_DB_HOST}/itasset/consumable/${existingImage}`}
+                    alt="미리보기"
+                    className="preview-img"
+                  />
+                ) : (
+                  <ImageIcon size={14} className="file-icon" />
+                )}
+
+                <span className="file-name">
+                  {selectedImage
+                    ? selectedImage.name
+                    : "기존 등록된 이미지 (유지됨)"}
+                </span>
                 <button
                   type="button"
                   className="clear-btn"
-                  onClick={() => setSelectedImage(null)}
+                  onClick={handleRemoveImage}
                 >
-                  <X size={12} />
+                  <X size={14} />
                 </button>
               </FileActiveBarZone>
             )}
@@ -196,7 +243,6 @@ export default function ConsumableFormModal({
   );
 }
 
-/* ─── 🎨 공통 업로드 스타일 ─── */
 const UploadDropZone = styled.div`
   display: flex;
   flex-direction: column;
@@ -230,6 +276,7 @@ const UploadDropZone = styled.div`
     }
   }
 `;
+
 const FileActiveBarZone = styled.div`
   display: flex;
   align-items: center;
@@ -239,11 +286,21 @@ const FileActiveBarZone = styled.div`
   background: #f0fdf4;
   height: 64px;
   box-sizing: border-box;
-  gap: 6px;
+  gap: 10px;
+
   .file-icon {
     color: #059669;
     flex-shrink: 0;
   }
+
+  .preview-img {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid #6ee7b7;
+  }
+
   .file-name {
     font-size: 11.5px;
     font-weight: 700;
@@ -260,8 +317,11 @@ const FileActiveBarZone = styled.div`
     cursor: pointer;
     display: flex;
     align-items: center;
+    padding: 4px;
+    border-radius: 4px;
     &:hover {
       color: #dc2626;
+      background: #fee2e2;
     }
   }
 `;

@@ -18,6 +18,8 @@ export default function ConsumablesManagement() {
     activeModal,
     targetHistoryItem,
     searchQuery,
+    userUsedList,
+    purchaseList,
     setSearchQuery,
     handleSelect,
     openModal,
@@ -150,6 +152,8 @@ export default function ConsumablesManagement() {
 
       <ConsumableContentPanel
         selectedItem={selectedItem}
+        userUsedList={userUsedList}
+        purchaseList={purchaseList}
         onAction={handleAction}
       />
 

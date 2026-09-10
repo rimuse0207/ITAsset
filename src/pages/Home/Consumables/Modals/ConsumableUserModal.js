@@ -4,6 +4,7 @@ import Select from "react-select";
 import ModalLayout from "../../HardWare/Modals/public/ModalLayout";
 import * as M from "../../HardWare/Modals/public/ModalStyle";
 import useSelectUser from "../../../../hooks/useSelectUser";
+import moment from "moment";
 
 export default function ConsumableUserModal({
   isOpen,
@@ -16,7 +17,7 @@ export default function ConsumableUserModal({
   const { selectUserOption } = useSelectUser();
   const getTodayString = () => new Date().toISOString().split("T")[0];
 
-  const [isUnknownUser, setIsUnknownUser] = useState(false); // 🚀 대상자 미지정 상태
+  const [isUnknownUser, setIsUnknownUser] = useState(false);
   const [formData, setFormData] = useState({
     userCode: "",
     name: "",
@@ -29,6 +30,7 @@ export default function ConsumableUserModal({
   useEffect(() => {
     if (isOpen) {
       if (mode === "edit" && targetHistory) {
+        console.log(targetHistory);
         setFormData({ ...targetHistory });
         setIsUnknownUser(!targetHistory.userCode);
       } else {
@@ -73,14 +75,14 @@ export default function ConsumableUserModal({
     // 지급 대상자 미지정일 경우 유저 정보 초기화
     const finalData = { ...formData };
     if (isUnknownUser) {
-      finalData.userCode = "UNKNOWN";
+      finalData.userCode = null;
       finalData.name = "미지정 (부서 공용 등)";
       finalData.dept = "-";
     }
-
+    console.log(targetItem, "targetItem");
     if (
       mode === "create" &&
-      finalData.issueCount > (targetItem?.currentStock || 0)
+      finalData.issueCount > (Number(targetItem?.currentStock) || 0)
     ) {
       alert("현재 재고수량보다 많은 수량을 지급할 수 없습니다.");
       return;
@@ -99,7 +101,9 @@ export default function ConsumableUserModal({
       boxShadow: "none",
       "&:hover": { borderColor: "#2563eb" },
     }),
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }), // 🚀 모달 위로 z-index 최상위 배정
+
+    menuPortal: (base) => ({ ...base, zIndex: 99999 }),
+    menu: (base) => ({ ...base, zIndex: 99999 }),
   };
 
   const titleZone = (
@@ -128,8 +132,6 @@ export default function ConsumableUserModal({
     >
       <M.StyledForm onSubmit={handleSubmit}>
         <M.ModalBody style={{ padding: "28px", overflow: "visible" }}>
-          {" "}
-          {/* 🚀 overflow visible 추가 */}
           <M.FormSection style={{ marginBottom: 0 }}>
             <M.Grid>
               <M.InputGroup className="full-width">
@@ -145,7 +147,7 @@ export default function ConsumableUserModal({
                     <User size={13} /> 지급 대상자 선택{" "}
                     <span className="required">*</span>
                   </M.SectionLabel>
-                  {/* 🚀 대상자 미지정 체크박스 */}
+
                   <label
                     style={{
                       fontSize: "12px",
@@ -169,7 +171,7 @@ export default function ConsumableUserModal({
                   options={selectUserOption}
                   styles={selectStyles}
                   menuPosition="fixed"
-                  menuPortalTarget={document.body} // 🚀 body 태그에 portal하여 잘림 현상 방지
+                  menuPortalTarget={document.body}
                   placeholder={
                     isUnknownUser
                       ? "미지정 처리됨"
@@ -199,7 +201,6 @@ export default function ConsumableUserModal({
                   name="issueCount"
                   required
                   min="1"
-                  max={mode === "create" ? targetItem?.currentStock : undefined}
                   value={formData.issueCount}
                   onChange={handleInputChange}
                 />
@@ -213,7 +214,7 @@ export default function ConsumableUserModal({
                   type="date"
                   name="issueDate"
                   required
-                  value={formData.issueDate}
+                  value={moment(formData.issueDate).format("YYYY-MM-DD")}
                   onChange={handleInputChange}
                 />
               </M.InputGroup>

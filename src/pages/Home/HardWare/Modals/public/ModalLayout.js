@@ -13,7 +13,7 @@ export default function ModalLayout({
   if (!isOpen) return null;
 
   return (
-    <ModalBackdrop onClick={onClose}>
+    <ModalBackdrop>
       <ModalContent maxWidth={maxWidth} onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
           {titleZone}

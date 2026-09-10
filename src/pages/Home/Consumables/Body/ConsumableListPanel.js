@@ -47,7 +47,10 @@ export default function ConsumableListPanel({
             >
               <ThumbnailZone>
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} />
+                  <img
+                    src={`${process.env.REACT_APP_DB_HOST}/itasset/consumable/${item.imageUrl}`}
+                    alt={item.name}
+                  />
                 ) : (
                   <Package size={28} color={theme.colors.textMuted} />
                 )}
@@ -56,7 +59,7 @@ export default function ConsumableListPanel({
               <InfoZone>
                 <div className="title-row">
                   <span className="name">{item.name}</span>
-                  {/* 🚀 Hover 시 나타나는 액션 그룹 */}
+
                   <ActionGroupWrapper className="action-group">
                     <InlineEditButton
                       type="button"
@@ -105,7 +108,6 @@ export default function ConsumableListPanel({
   );
 }
 
-// ... 기존 스타일 유지 ...
 const ListPanel = styled.div`
   width: 340px;
   border-right: 1px solid ${() => theme.colors.border};

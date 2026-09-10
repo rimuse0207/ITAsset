@@ -1,13 +1,29 @@
 import { useState, useMemo, useEffect } from "react";
+import { Request_Post_Axios } from "../../API";
+import useConsumableAPI from "./useConsumableAPI";
 
 export default function useConsumables() {
+  const {
+    getConsumableCategories,
+    addConsumableCategory,
+    updateConsumableCategory,
+    deleteConsumableCategory,
+    getConsumableUserUsedList,
+    addConsumableUserUsed,
+    updateConsumableUserUsed,
+    deleteConsumableUserUsed,
+    getStockPurchase,
+    addStockPurchase,
+    updateStockPurchase,
+    deleteStockPurchase,
+  } = useConsumableAPI();
   const [list, setList] = useState([
     {
       id: "C001",
       name: "로지텍 MX Master 3S",
       category: "PC 주변기기",
       itemType: "마우스",
-      currentStock: 12,
+      currentStock: 0,
       imageUrl: "",
     },
   ]);
@@ -15,9 +31,44 @@ export default function useConsumables() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
 
-  // 🚀 상세 내역(지급, 입고) 수정 시 대상 데이터를 담아둘 상태
   const [targetHistoryItem, setTargetHistoryItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [userUsedList, setUserUsedList] = useState([]);
+  const [purchaseList, setPurchaseList] = useState([]);
+
+  useEffect(() => {
+    getConsumableLists();
+  }, []);
+
+  const getConsumableLists = async () => {
+    const req = await getConsumableCategories();
+    if (req) {
+      setList(req);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedItem) {
+      return;
+    }
+    getUserUsedLists();
+    getPurchaseLists();
+  }, [selectedItem]);
+
+  const getUserUsedLists = async () => {
+    const req = await getConsumableUserUsedList(selectedItem.id);
+    if (req) {
+      setUserUsedList(req || []);
+    }
+  };
+
+  const getPurchaseLists = async () => {
+    const req = await getStockPurchase(selectedItem.id);
+    if (req) {
+      setPurchaseList(req || []);
+    }
+  };
 
   useEffect(() => {
     if (selectedItem) {
@@ -25,6 +76,16 @@ export default function useConsumables() {
       if (updatedItem) setSelectedItem(updatedItem);
     }
   }, [list]);
+
+  const changeCurrentStockCount = (selectedId, nowCount) => {
+    setList(
+      list.map((item) => {
+        return item.id === selectedId
+          ? { ...item, currentStock: Number(nowCount) }
+          : item;
+      }),
+    );
+  };
 
   const filteredList = useMemo(() => {
     if (!searchQuery) return list;
@@ -50,11 +111,45 @@ export default function useConsumables() {
 
   // ─── [소모품 마스터 CRUD] ───
   const addConsumable = async (formData) => {
-    console.log("전송될 데이터:", Object.fromEntries(formData.entries()));
-    /* 이전 코드와 동일 */ closeModal();
+    const req = await addConsumableCategory(formData);
+
+    if (req) {
+      const InsertData = Object.fromEntries(formData.entries());
+      const newList = {
+        id: req.consumableId,
+        name: InsertData.name,
+        category: InsertData.category,
+        itemType: InsertData.itemType,
+        currentStock: 12,
+        imageUrl: req.consumableImageURL,
+      };
+      setList(list.concat(newList));
+    }
+    closeModal();
   };
   const updateConsumable = async (formData) => {
-    /* 이전 코드와 동일 */ closeModal();
+    const req = await updateConsumableCategory(formData);
+    if (req) {
+      const UpdateData = Object.fromEntries(formData.entries());
+      setList(
+        list.map((item) =>
+          item.id === UpdateData.id
+            ? {
+                ...item,
+                name: UpdateData.name,
+                category: UpdateData.category,
+                itemType: UpdateData.itemType,
+                imageUrl: req.isFileChanged
+                  ? req.filename
+                  : req.isDeleted
+                    ? null
+                    : item.imageUrl,
+              }
+            : item,
+        ),
+      );
+      closeModal();
+    }
   };
 
   // 🚀 소모품 삭제
@@ -62,7 +157,7 @@ export default function useConsumables() {
     if (
       window.confirm(`[${item.name}] 소모품 자산을 완전히 삭제하시겠습니까?`)
     ) {
-      // await fetch(`/api/consumables/${item.id}`, { method: 'DELETE' });
+      await deleteConsumableCategory(item.id);
       setList((prev) => prev.filter((i) => i.id !== item.id));
       if (selectedItem?.id === item.id) setSelectedItem(null);
     }
@@ -70,12 +165,23 @@ export default function useConsumables() {
 
   // ─── [사용자 지급 내역 CRUD] ───
   const issueToUser = async (payload) => {
-    /* 지급 등록 */ closeModal();
+    const req = await addConsumableUserUsed(payload, selectedItem);
+
+    if (req) {
+      await getUserUsedLists();
+      // 이후 잔여 재고 변경
+      changeCurrentStockCount(selectedItem.id, Number(req.nowCurrentCount));
+    }
+    closeModal();
   };
 
   const updateIssue = async (payload) => {
     console.log("지급 내역 수정 완료:", payload);
-    // await fetch(`/api/consumables/issue/${targetHistoryItem.id}`, { method: 'PUT' });
+    const req = await updateConsumableUserUsed(payload);
+    if (req) {
+      await getUserUsedLists();
+    }
+
     closeModal();
   };
 
@@ -83,19 +189,48 @@ export default function useConsumables() {
     if (
       window.confirm("해당 지급 내역을 삭제하시겠습니까? (재고가 롤백됩니다)")
     ) {
-      console.log("지급 내역 삭제:", payload.id);
-      // await fetch(`/api/consumables/issue/${payload.id}`, { method: 'DELETE' });
+      const req = await deleteConsumableUserUsed(
+        payload.id,
+        payload.consumableId,
+      );
+
+      await getUserUsedLists();
+
+      if (req) {
+        changeCurrentStockCount(
+          payload.consumableId,
+          Number(req.nowCurrentCount),
+        );
+      }
     }
   };
 
   // ─── [입고 및 결재 내역 CRUD] ───
   const registerPurchase = async (multipartFormData) => {
-    /* 입고 등록 */ closeModal();
+    const req = await addStockPurchase(multipartFormData);
+    if (req) {
+      await getPurchaseLists();
+      const UpdateData = Object.fromEntries(multipartFormData.entries());
+      changeCurrentStockCount(
+        UpdateData.consumableId,
+        Number(req.nowCurrentCount),
+      );
+    }
+    closeModal();
   };
 
   const updatePurchase = async (multipartFormData) => {
     console.log("입고 내역 수정 완료");
-    // await fetch(`/api/consumables/purchase/${targetHistoryItem.id}`, { method: 'PUT' });
+    const req = await updateStockPurchase(multipartFormData);
+    if (req) {
+      await getPurchaseLists();
+      const UpdateData = Object.fromEntries(multipartFormData.entries());
+      changeCurrentStockCount(
+        UpdateData.consumableId,
+        Number(req.nowCurrentCount),
+      );
+    }
+
     closeModal();
   };
 
@@ -103,8 +238,14 @@ export default function useConsumables() {
     if (
       window.confirm("해당 입고 내역을 삭제하시겠습니까? (재고가 롤백됩니다)")
     ) {
-      console.log("입고 내역 삭제:", payload.id);
-      // await fetch(`/api/consumables/purchase/${payload.id}`, { method: 'DELETE' });
+      const req = await deleteStockPurchase(payload.purchaseId);
+      if (req) {
+        await getPurchaseLists();
+        changeCurrentStockCount(
+          payload.consumableId,
+          Number(req.nowCurrentCount),
+        );
+      }
     }
   };
 
@@ -114,6 +255,8 @@ export default function useConsumables() {
     activeModal,
     targetHistoryItem,
     searchQuery,
+    userUsedList,
+    purchaseList,
     setSearchQuery,
     handleSelect,
     openModal,
