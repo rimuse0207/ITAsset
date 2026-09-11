@@ -152,7 +152,7 @@ export default function useConsumables() {
     }
   };
 
-  // 🚀 소모품 삭제
+  // 소모품 삭제
   const deleteConsumable = async (item) => {
     if (
       window.confirm(`[${item.name}] 소모품 자산을 완전히 삭제하시겠습니까?`)
@@ -263,12 +263,12 @@ export default function useConsumables() {
     closeModal,
     addConsumable,
     updateConsumable,
-    deleteConsumable, // 추가
+    deleteConsumable,
     issueToUser,
-    updateIssue, // 추가
-    deleteIssue, // 추가
+    updateIssue,
+    deleteIssue,
     registerPurchase,
-    updatePurchase, // 추가
-    deletePurchase, // 추가
+    updatePurchase,
+    deletePurchase,
   };
 }

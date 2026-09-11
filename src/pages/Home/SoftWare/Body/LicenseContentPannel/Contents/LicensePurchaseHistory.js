@@ -200,7 +200,7 @@ export const UserTable = styled.table`
   }
 `;
 
-const InlineFileDownloadBadge = styled.div`
+export const InlineFileDownloadBadge = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 6px;

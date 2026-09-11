@@ -5,6 +5,8 @@ import { Users, FileText, Plus, Paperclip, Edit3, Trash2 } from "lucide-react";
 import SoftwareHeader from "../../SoftWare/Header/SoftwareHeader";
 import { theme } from "../../Style/MainStyle";
 import moment from "moment/moment";
+import { InlineFileDownloadBadge } from "../../SoftWare/Body/LicenseContentPannel/Contents/LicensePurchaseHistory";
+import { FileDownload } from "../../../../publicFunc/FileDownload/FileDownload";
 
 export default function ConsumableContentPanel({
   selectedItem,
@@ -132,9 +134,23 @@ export default function ConsumableContentPanel({
                       </td>
                       <td className={list.originalFileName ? "file-link" : ""}>
                         {list.originalFileName ? (
-                          <>
-                            <Paperclip size={12} /> {list.originalFileName}
-                          </>
+                          <InlineFileDownloadBadge
+                            onDoubleClick={(e) => {
+                              FileDownload(
+                                e,
+                                list.purchaseProofUrl,
+                                list.originalFileName,
+                                "consumable",
+                              );
+                            }}
+                            title="더블 클릭 시 지출 품의서 사본을 다운로드합니다."
+                          >
+                            <FileText size={12} />
+                            <span className="f-name">
+                              {list.originalFileName}
+                            </span>
+                            {/* <Paperclip size={12} /> {list.originalFileName} */}
+                          </InlineFileDownloadBadge>
                         ) : (
                           <></>
                         )}

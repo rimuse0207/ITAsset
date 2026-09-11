@@ -22,6 +22,7 @@ export default function useModalForm({
     if (mode === "edit" && targetAsset) {
       // 🛠️ 수정 모드 데이터 매핑
       setFormData({
+        ...targetAsset,
         deviceType: targetAsset?.deviceType || "PC",
         name: targetAsset?.name || "",
         category: targetAsset?.category || "데스크탑/노트북",
@@ -34,10 +35,7 @@ export default function useModalForm({
       });
       setTargetRows([
         {
-          id: Date.now(),
-          user: targetAsset.user || "",
-          serial: targetAsset.serial || "",
-          memo: targetAsset?.memo || "",
+          ...targetAsset,
         },
       ]);
     } else {

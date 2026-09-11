@@ -26,7 +26,6 @@ export default function AssetFormModal({
   targetAsset,
   onSave,
 }) {
-  // 폼 초기 상태 스키마
   const initialFormState = {
     deviceType: targetAsset?.deviceType || "PC",
     name: "",
@@ -36,7 +35,7 @@ export default function AssetFormModal({
     specRam: "",
     specStorage: "",
     monitorSize: "",
-    phoneNumber: "",
+    phoneNumber: "", // 공통 혹은 마스터 폰 번호
     memo: "",
   };
 
@@ -57,6 +56,7 @@ export default function AssetFormModal({
     onSave,
     onClose,
   });
+  console.log(targetRows);
   const { selectUserOption } = useSelectUser();
 
   const selectCustomStyles = {
@@ -70,46 +70,16 @@ export default function AssetFormModal({
       borderRadius: "6px",
       fontSize: "12.5px",
       fontFamily: "inherit",
-      "&:hover": {
-        borderColor: "#2563eb",
-      },
+      "&:hover": { borderColor: "#2563eb" },
     }),
-    valueContainer: (base) => ({
-      ...base,
-      padding: "0 8px",
-      height: "32px",
-    }),
-    indicatorsContainer: (base) => ({
-      ...base,
-      height: "32px",
-    }),
-    dropdownIndicator: (base) => ({
-      ...base,
-      padding: "4px",
-    }),
-    clearIndicator: (base) => ({
-      ...base,
-      padding: "4px",
-    }),
-    input: (base) => ({
-      ...base,
-      margin: "0px",
-      padding: "0px",
-    }),
-    menu: (base) => ({
-      ...base,
-      fontSize: "12.5px",
-      zIndex: 9999,
-    }),
-
-    menuList: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 99999,
-    }),
+    valueContainer: (base) => ({ ...base, padding: "0 8px", height: "32px" }),
+    indicatorsContainer: (base) => ({ ...base, height: "32px" }),
+    dropdownIndicator: (base) => ({ ...base, padding: "4px" }),
+    clearIndicator: (base) => ({ ...base, padding: "4px" }),
+    input: (base) => ({ ...base, margin: "0px", padding: "0px" }),
+    menu: (base) => ({ ...base, fontSize: "12.5px", zIndex: 9999 }),
+    menuList: (base) => ({ ...base, zIndex: 9999 }),
+    menuPortal: (base) => ({ ...base, zIndex: 99999 }),
     option: (base, state) => ({
       ...base,
       padding: "6px 12px",
@@ -145,6 +115,7 @@ export default function AssetFormModal({
   );
 
   const customPayloadBuilder = (form, rows) => {
+    console.log(form, rows);
     const basePayload = {
       deviceType: form.deviceType,
       name: form.name,
@@ -165,19 +136,38 @@ export default function AssetFormModal({
         ...basePayload,
         user: rows[0].user || null,
         serial: rows[0].serial,
+        erpCode: rows[0].erpCode || "", // 🚀 누락되었던 ERP 코드 추가
         memo: rows[0].memo || "",
-        ...(form.deviceType === "IPHONE" && { imei: rows[0].imei }),
+        // 🚀 아이폰일 경우 새로 추가된 값들 전송
+        ...(form.deviceType === "IPHONE" && {
+          imei1: rows[0].imei1,
+          imei2: rows[0].imei2,
+          eid: rows[0].eid,
+        }),
       };
     } else {
       return rows.map((row) => ({
         ...basePayload,
         user: row.user || null,
         serial: row.serial,
+        erpCode: row.erpCode || "",
         memo: row.memo || "",
-        ...(form.deviceType === "IPHONE" && { imei: row.imei }),
+        // 🚀 아이폰일 경우 새로 추가된 값들 전송
+        ...(form.deviceType === "IPHONE" && {
+          imei1: row.imei1,
+          imei2: row.imei2,
+          eid: row.eid,
+        }),
       }));
     }
   };
+
+  // 🚀 디바이스 기종에 따라 테이블의 열(Column) 개수 및 너비 동적 조절
+  // PC/MONITOR: 6개 열, IPHONE: 9개 열
+  const tableGridColumns =
+    formData.deviceType === "IPHONE"
+      ? "40px 1.5fr 1.2fr 1.2fr 1.2fr 1.5fr 1fr 1.2fr 40px"
+      : "40px 1.5fr 1.5fr 1.2fr 1.5fr 40px";
 
   return (
     <ModalLayout
@@ -192,7 +182,6 @@ export default function AssetFormModal({
         }
       >
         <M.FormBody style={{ padding: "4px 24px 24px 24px" }}>
-          {/* [대분류 선택 탭] */}
           <DeviceTypeTabSelector>
             <TabButton
               type="button"
@@ -269,7 +258,6 @@ export default function AssetFormModal({
                   />
                 </M.InputWrapper>
               </M.InputGroup>
-
               <M.InputGroup>
                 <M.SectionLabel>고정 카테고리 분류</M.SectionLabel>
                 <M.Input
@@ -280,7 +268,6 @@ export default function AssetFormModal({
                   style={{ background: "#f8fafc", fontWeight: 600 }}
                 />
               </M.InputGroup>
-
               <M.InputGroup>
                 <M.SectionLabel>
                   {mode === "edit" ? "최근 실사/변경일" : "일괄 입고 등록일"}
@@ -326,7 +313,6 @@ export default function AssetFormModal({
                 </M.MiniInputGroup>
               </M.SpecRowGrid>
             )}
-
             {formData.deviceType === "MONITOR" && (
               <M.SpecRowGrid style={{ gridTemplateColumns: "1fr" }}>
                 <M.MiniInputGroup>
@@ -342,7 +328,6 @@ export default function AssetFormModal({
                 </M.MiniInputGroup>
               </M.SpecRowGrid>
             )}
-
             {formData.deviceType === "IPHONE" && (
               <M.SpecRowGrid style={{ gridTemplateColumns: "1fr" }}>
                 <M.MiniInputGroup>
@@ -367,17 +352,29 @@ export default function AssetFormModal({
                 : `2. 입고 대상 장비 일련번호 기입 매트릭스 (${targetRows.length}대)`}
             </M.SectionTitle>
 
+            {/* 🚀 테이블 헤더 레이아웃 동적 렌더링 */}
             <M.BulkTableHeader
-              style={{ gridTemplateColumns: "40px 1.8fr 1.8fr 1.8fr 40px" }}
+              style={{ gridTemplateColumns: tableGridColumns }}
             >
+              <div className="col-index">No.</div>
               <div className="col-user">실사용자 (부서)</div>
               <div className="col-serial">
-                {formData.deviceType === "MONITOR"
-                  ? "모니터 S/N *"
-                  : formData.deviceType === "PC"
-                    ? "제조사 시리얼 (S/N) *"
-                    : "IMEI*"}
+                {formData.deviceType === "IPHONE"
+                  ? "일련번호 (S/N) *"
+                  : formData.deviceType === "MONITOR"
+                    ? "모니터 S/N *"
+                    : "제조사 시리얼 (S/N) *"}
               </div>
+
+              {/* 🚀 아이폰 전용 추가 헤더 */}
+              {formData.deviceType === "IPHONE" && (
+                <>
+                  <div className="col-serial">IMEI 1 *</div>
+                  <div className="col-serial">IMEI 2</div>
+                  <div className="col-serial">EID</div>
+                </>
+              )}
+
               <div className="col-memo">ERP 자산코드</div>
               <div className="col-memo">자산 특이사항 (비고)</div>
               <div className="col-action">{mode === "create" && "제거"}</div>
@@ -388,7 +385,7 @@ export default function AssetFormModal({
                 <M.BulkRow
                   key={row.id}
                   style={{
-                    gridTemplateColumns: "40px 1.8fr 1.8fr 1.8fr 40px",
+                    gridTemplateColumns: tableGridColumns,
                     overflow: "visible",
                   }}
                 >
@@ -421,7 +418,7 @@ export default function AssetFormModal({
                     />
                   </div>
 
-                  {/* 📟 시리얼 넘버 */}
+                  {/* 📟 일련번호 / S/N */}
                   <div className="col-serial">
                     <M.RowInput
                       type="text"
@@ -433,6 +430,44 @@ export default function AssetFormModal({
                       required
                     />
                   </div>
+
+                  {/* 🚀 아이폰 전용 추가 인풋창 */}
+                  {formData.deviceType === "IPHONE" && (
+                    <>
+                      <div className="col-serial">
+                        <M.RowInput
+                          type="text"
+                          placeholder="IMEI 1"
+                          value={row.imei1 || ""}
+                          onChange={(e) =>
+                            handleRowChange(row.id, "imei1", e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+                      <div className="col-serial">
+                        <M.RowInput
+                          type="text"
+                          placeholder="IMEI 2"
+                          value={row.imei2 || ""}
+                          onChange={(e) =>
+                            handleRowChange(row.id, "imei2", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="col-serial">
+                        <M.RowInput
+                          type="text"
+                          placeholder="EID"
+                          value={row.eid || ""}
+                          onChange={(e) =>
+                            handleRowChange(row.id, "eid", e.target.value)
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
+
                   <div className="col-memo">
                     <M.RowInput
                       type="text"
@@ -444,11 +479,10 @@ export default function AssetFormModal({
                     />
                   </div>
 
-                  {/* 📝 자산 비고 */}
                   <div className="col-memo">
                     <M.RowInput
                       type="text"
-                      placeholder="예: DISCO PC, M24xxx"
+                      placeholder="비고"
                       value={row.memo || ""}
                       onChange={(e) =>
                         handleRowChange(row.id, "memo", e.target.value)
