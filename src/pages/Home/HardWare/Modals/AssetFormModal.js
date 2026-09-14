@@ -1,13 +1,10 @@
 import React from "react";
 import {
   Monitor,
-  Calendar,
-  User,
   Check,
   Plus,
   Trash2,
   Layers,
-  Search,
   Edit3,
   Smartphone,
   Tv,
@@ -56,9 +53,10 @@ export default function AssetFormModal({
     onSave,
     onClose,
   });
-  console.log(targetRows);
+
   const { selectUserOption } = useSelectUser();
 
+  // 🚀 React-Select 스타일링 (z-index 및 잘림 방지 완벽 적용)
   const selectCustomStyles = {
     control: (base, state) => ({
       ...base,
@@ -105,7 +103,9 @@ export default function AssetFormModal({
         <span className={`category-tag ${mode === "edit" ? "edit-mode" : ""}`}>
           {mode === "edit" ? "자산 수정" : "자산 신규 입고"}
         </span>
-        <h2 style={{ fontSize: "18px", fontWeight: "700", marginTop: "4px" }}>
+        <h2
+          style={{ fontSize: "18px", fontWeight: "700", margin: "4px 0 0 0" }}
+        >
           {mode === "edit"
             ? `자산 항목 정보 수정 (${targetAsset?.id})`
             : "대량 자산 일괄 입고 등록"}
@@ -115,7 +115,6 @@ export default function AssetFormModal({
   );
 
   const customPayloadBuilder = (form, rows) => {
-    console.log(form, rows);
     const basePayload = {
       deviceType: form.deviceType,
       name: form.name,
@@ -130,44 +129,215 @@ export default function AssetFormModal({
       ...(form.deviceType === "IPHONE" && { phoneNumber: form.phoneNumber }),
     };
 
+    const buildRowData = (row) => ({
+      ...basePayload,
+      user: row.user || null,
+      serial: row.serial,
+      erpCode: row.erpCode || "",
+      memo: row.memo || "",
+      ...(form.deviceType === "IPHONE" && {
+        imei1: row.imei1,
+        imei2: row.imei2,
+        eid: row.eid,
+      }),
+    });
+
     if (mode === "edit") {
-      return {
-        id: targetAsset.id,
-        ...basePayload,
-        user: rows[0].user || null,
-        serial: rows[0].serial,
-        erpCode: rows[0].erpCode || "", // 🚀 누락되었던 ERP 코드 추가
-        memo: rows[0].memo || "",
-        // 🚀 아이폰일 경우 새로 추가된 값들 전송
-        ...(form.deviceType === "IPHONE" && {
-          imei1: rows[0].imei1,
-          imei2: rows[0].imei2,
-          eid: rows[0].eid,
-        }),
-      };
+      return { id: targetAsset.id, ...buildRowData(rows[0]) };
     } else {
-      return rows.map((row) => ({
-        ...basePayload,
-        user: row.user || null,
-        serial: row.serial,
-        erpCode: row.erpCode || "",
-        memo: row.memo || "",
-        // 🚀 아이폰일 경우 새로 추가된 값들 전송
-        ...(form.deviceType === "IPHONE" && {
-          imei1: row.imei1,
-          imei2: row.imei2,
-          eid: row.eid,
-        }),
-      }));
+      return rows.map(buildRowData);
     }
   };
 
-  // 🚀 디바이스 기종에 따라 테이블의 열(Column) 개수 및 너비 동적 조절
-  // PC/MONITOR: 6개 열, IPHONE: 9개 열
+  // 🚀 디바이스 기종에 따라 테이블 열(Column) 개수 및 너비 동적 조절
   const tableGridColumns =
     formData.deviceType === "IPHONE"
       ? "40px 1.5fr 1.2fr 1.2fr 1.2fr 1.5fr 1fr 1.2fr 40px"
       : "40px 1.5fr 1.5fr 1.2fr 1.5fr 40px";
+
+  // ─────────────── [분리된 렌더링 함수들] ───────────────
+
+  // 1. 기기 종류에 따른 사양 입력 그리드 렌더링
+  const renderDeviceSpecs = () => {
+    if (formData.deviceType === "PC") {
+      return (
+        <M.SpecRowGrid>
+          <M.MiniInputGroup>
+            <M.SectionLabel className="mini">CPU 스펙</M.SectionLabel>
+            <M.Input
+              name="specCpu"
+              placeholder="예: i5-3세대"
+              value={formData.specCpu}
+              onChange={handleInputChange}
+            />
+          </M.MiniInputGroup>
+          <M.MiniInputGroup>
+            <M.SectionLabel className="mini">RAM 용량</M.SectionLabel>
+            <M.Input
+              name="specRam"
+              placeholder="예: 32GB"
+              value={formData.specRam}
+              onChange={handleInputChange}
+            />
+          </M.MiniInputGroup>
+          <M.MiniInputGroup>
+            <M.SectionLabel className="mini">Storage 용량</M.SectionLabel>
+            <M.Input
+              name="specStorage"
+              placeholder="예: 1TB SSD"
+              value={formData.specStorage}
+              onChange={handleInputChange}
+            />
+          </M.MiniInputGroup>
+        </M.SpecRowGrid>
+      );
+    }
+
+    if (formData.deviceType === "MONITOR") {
+      return (
+        <M.SpecRowGrid style={{ gridTemplateColumns: "1fr" }}>
+          <M.MiniInputGroup>
+            <M.SectionLabel className="mini">
+              디스플레이 화면 인치 수 (Size)
+            </M.SectionLabel>
+            <M.Input
+              name="monitorSize"
+              placeholder="예: 24인치, 27인치"
+              value={formData.monitorSize}
+              onChange={handleInputChange}
+            />
+          </M.MiniInputGroup>
+        </M.SpecRowGrid>
+      );
+    }
+
+    if (formData.deviceType === "IPHONE") {
+      return (
+        <M.SpecRowGrid style={{ gridTemplateColumns: "1fr" }}>
+          <M.MiniInputGroup>
+            <M.SectionLabel className="mini">
+              마스터 폰 번호 (선택)
+            </M.SectionLabel>
+            <M.Input
+              name="phoneNumber"
+              placeholder="예: 010-xxxx-xxxx"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+            />
+          </M.MiniInputGroup>
+        </M.SpecRowGrid>
+      );
+    }
+    return null;
+  };
+
+  // 2. 대량 입고 테이블 행 렌더링
+  const renderTableRows = () =>
+    targetRows.map((row, index) => (
+      <M.BulkRow
+        key={row.id}
+        style={{ gridTemplateColumns: tableGridColumns, overflow: "visible" }}
+      >
+        <div className="col-index">{index + 1}</div>
+
+        <div
+          className="col-user"
+          style={{ overflow: "visible", display: "block" }}
+        >
+          <Select
+            styles={selectCustomStyles}
+            options={selectUserOption}
+            placeholder="사원 검색..."
+            isClearable={true}
+            value={
+              row.user
+                ? selectUserOption.find((opt) => opt.value === row.user)
+                : null
+            }
+            onChange={(selectedOption) => {
+              const value = selectedOption ? selectedOption.value : null;
+              handleRowChange(row.id, "user", value);
+            }}
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
+          />
+        </div>
+
+        {/* 📟 공통 시리얼 넘버 */}
+        <div className="col-serial">
+          <M.RowInput
+            type="text"
+            placeholder="일련번호 입력"
+            value={row.serial || ""}
+            onChange={(e) => handleRowChange(row.id, "serial", e.target.value)}
+            required
+          />
+        </div>
+
+        {/* 🚀 아이폰 전용 추가 인풋창 (IMEI1, IMEI2, EID) */}
+        {formData.deviceType === "IPHONE" && (
+          <>
+            <div className="col-serial">
+              <M.RowInput
+                type="text"
+                placeholder="IMEI 1"
+                value={row.imei1 || ""}
+                onChange={(e) =>
+                  handleRowChange(row.id, "imei1", e.target.value)
+                }
+                required
+              />
+            </div>
+            <div className="col-serial">
+              <M.RowInput
+                type="text"
+                placeholder="IMEI 2"
+                value={row.imei2 || ""}
+                onChange={(e) =>
+                  handleRowChange(row.id, "imei2", e.target.value)
+                }
+              />
+            </div>
+            <div className="col-serial">
+              <M.RowInput
+                type="text"
+                placeholder="EID"
+                value={row.eid || ""}
+                onChange={(e) => handleRowChange(row.id, "eid", e.target.value)}
+              />
+            </div>
+          </>
+        )}
+
+        <div className="col-memo">
+          <M.RowInput
+            type="text"
+            placeholder="예: PC0111"
+            value={row.erpCode || ""}
+            onChange={(e) => handleRowChange(row.id, "erpCode", e.target.value)}
+          />
+        </div>
+
+        <div className="col-memo">
+          <M.RowInput
+            type="text"
+            placeholder="비고"
+            value={row.memo || ""}
+            onChange={(e) => handleRowChange(row.id, "memo", e.target.value)}
+          />
+        </div>
+
+        <div className="col-action">
+          {mode === "create" && (
+            <M.RowDeleteButton type="button" onClick={() => removeRow(row.id)}>
+              <Trash2 size={14} />
+            </M.RowDeleteButton>
+          )}
+        </div>
+      </M.BulkRow>
+    ));
+
+  // ─────────────── [메인 렌더링 뷰] ───────────────
 
   return (
     <ModalLayout
@@ -182,6 +352,7 @@ export default function AssetFormModal({
         }
       >
         <M.FormBody style={{ padding: "4px 24px 24px 24px" }}>
+          {/* 디바이스 카테고리 탭 (수정 모드일 땐 변경 불가) */}
           <DeviceTypeTabSelector>
             <TabButton
               type="button"
@@ -230,7 +401,7 @@ export default function AssetFormModal({
             </TabButton>
           </DeviceTypeTabSelector>
 
-          {/* 1️⃣ 섹션: 공통 기초정보 */}
+          {/* 1️⃣ 섹션: 공통 기초정보 및 스펙 */}
           <M.FormSection>
             <M.SectionTitle>
               <Layers size={16} /> 1. 선택 자산 기종 공통 스펙 명세
@@ -250,7 +421,7 @@ export default function AssetFormModal({
                       formData.deviceType === "PC"
                         ? "예: 삼성 갤럭시 북5 PRO"
                         : formData.deviceType === "IPHONE"
-                          ? "예: iPhone SE3 "
+                          ? "예: iPhone SE3"
                           : "예: 삼성 LS24D300"
                     }
                     value={formData.name}
@@ -281,66 +452,8 @@ export default function AssetFormModal({
               </M.InputGroup>
             </M.Grid>
 
-            {/* 사양 분기 */}
-            {formData.deviceType === "PC" && (
-              <M.SpecRowGrid>
-                <M.MiniInputGroup>
-                  <M.SectionLabel className="mini">CPU 스펙</M.SectionLabel>
-                  <M.Input
-                    name="specCpu"
-                    placeholder="예: i5-3세대"
-                    value={formData.specCpu}
-                    onChange={handleInputChange}
-                  />
-                </M.MiniInputGroup>
-                <M.MiniInputGroup>
-                  <M.SectionLabel className="mini">RAM 용량</M.SectionLabel>
-                  <M.Input
-                    name="specRam"
-                    placeholder="예: 32GB"
-                    value={formData.specRam}
-                    onChange={handleInputChange}
-                  />
-                </M.MiniInputGroup>
-                <M.MiniInputGroup>
-                  <M.SectionLabel className="mini">Storage 용량</M.SectionLabel>
-                  <M.Input
-                    name="specStorage"
-                    placeholder="예: 1TB SSD"
-                    value={formData.specStorage}
-                    onChange={handleInputChange}
-                  />
-                </M.MiniInputGroup>
-              </M.SpecRowGrid>
-            )}
-            {formData.deviceType === "MONITOR" && (
-              <M.SpecRowGrid style={{ gridTemplateColumns: "1fr" }}>
-                <M.MiniInputGroup>
-                  <M.SectionLabel className="mini">
-                    디스플레이 화면 인치 수 (Size)
-                  </M.SectionLabel>
-                  <M.Input
-                    name="monitorSize"
-                    placeholder="예: 24인치, 27인치 "
-                    value={formData.monitorSize}
-                    onChange={handleInputChange}
-                  />
-                </M.MiniInputGroup>
-              </M.SpecRowGrid>
-            )}
-            {formData.deviceType === "IPHONE" && (
-              <M.SpecRowGrid style={{ gridTemplateColumns: "1fr" }}>
-                <M.MiniInputGroup>
-                  <M.SectionLabel className="mini">폰 번호</M.SectionLabel>
-                  <M.Input
-                    name="phoneNumber"
-                    placeholder="예: 010-xxxx-xxxx"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
-                  />
-                </M.MiniInputGroup>
-              </M.SpecRowGrid>
-            )}
+            {/* 디바이스별 사양 입력 컴포넌트 렌더링 */}
+            {renderDeviceSpecs()}
           </M.FormSection>
 
           {/* 2️⃣ 섹션: 자산 분할 매핑 테이블 리스트 영역 */}
@@ -352,7 +465,7 @@ export default function AssetFormModal({
                 : `2. 입고 대상 장비 일련번호 기입 매트릭스 (${targetRows.length}대)`}
             </M.SectionTitle>
 
-            {/* 🚀 테이블 헤더 레이아웃 동적 렌더링 */}
+            {/* 테이블 헤더 */}
             <M.BulkTableHeader
               style={{ gridTemplateColumns: tableGridColumns }}
             >
@@ -366,7 +479,7 @@ export default function AssetFormModal({
                     : "제조사 시리얼 (S/N) *"}
               </div>
 
-              {/* 🚀 아이폰 전용 추가 헤더 */}
+              {/* 아이폰 전용 추가 헤더 */}
               {formData.deviceType === "IPHONE" && (
                 <>
                   <div className="col-serial">IMEI 1 *</div>
@@ -380,130 +493,10 @@ export default function AssetFormModal({
               <div className="col-action">{mode === "create" && "제거"}</div>
             </M.BulkTableHeader>
 
-            <M.BulkTableBody>
-              {targetRows.map((row, index) => (
-                <M.BulkRow
-                  key={row.id}
-                  style={{
-                    gridTemplateColumns: tableGridColumns,
-                    overflow: "visible",
-                  }}
-                >
-                  <div className="col-index">{index + 1}</div>
+            {/* 테이블 내용 */}
+            <M.BulkTableBody>{renderTableRows()}</M.BulkTableBody>
 
-                  <div
-                    className="col-user"
-                    style={{ overflow: "visible", display: "block" }}
-                  >
-                    <Select
-                      styles={selectCustomStyles}
-                      options={selectUserOption}
-                      placeholder="사원 검색..."
-                      isClearable={true}
-                      value={
-                        row.user
-                          ? selectUserOption.find(
-                              (opt) => opt.value === row.user,
-                            )
-                          : null
-                      }
-                      onChange={(selectedOption) => {
-                        const value = selectedOption
-                          ? selectedOption.value
-                          : null;
-                        handleRowChange(row.id, "user", value);
-                      }}
-                      menuPortalTarget={document.body}
-                      menuPosition="fixed"
-                    />
-                  </div>
-
-                  {/* 📟 일련번호 / S/N */}
-                  <div className="col-serial">
-                    <M.RowInput
-                      type="text"
-                      placeholder="일련번호 입력"
-                      value={row.serial || ""}
-                      onChange={(e) =>
-                        handleRowChange(row.id, "serial", e.target.value)
-                      }
-                      required
-                    />
-                  </div>
-
-                  {/* 🚀 아이폰 전용 추가 인풋창 */}
-                  {formData.deviceType === "IPHONE" && (
-                    <>
-                      <div className="col-serial">
-                        <M.RowInput
-                          type="text"
-                          placeholder="IMEI 1"
-                          value={row.imei1 || ""}
-                          onChange={(e) =>
-                            handleRowChange(row.id, "imei1", e.target.value)
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="col-serial">
-                        <M.RowInput
-                          type="text"
-                          placeholder="IMEI 2"
-                          value={row.imei2 || ""}
-                          onChange={(e) =>
-                            handleRowChange(row.id, "imei2", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="col-serial">
-                        <M.RowInput
-                          type="text"
-                          placeholder="EID"
-                          value={row.eid || ""}
-                          onChange={(e) =>
-                            handleRowChange(row.id, "eid", e.target.value)
-                          }
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  <div className="col-memo">
-                    <M.RowInput
-                      type="text"
-                      placeholder="예: PC0111"
-                      value={row.erpCode || ""}
-                      onChange={(e) =>
-                        handleRowChange(row.id, "erpCode", e.target.value)
-                      }
-                    />
-                  </div>
-
-                  <div className="col-memo">
-                    <M.RowInput
-                      type="text"
-                      placeholder="비고"
-                      value={row.memo || ""}
-                      onChange={(e) =>
-                        handleRowChange(row.id, "memo", e.target.value)
-                      }
-                    />
-                  </div>
-
-                  <div className="col-action">
-                    {mode === "create" && (
-                      <M.RowDeleteButton
-                        type="button"
-                        onClick={() => removeRow(row.id)}
-                      >
-                        <Trash2 size={14} />
-                      </M.RowDeleteButton>
-                    )}
-                  </div>
-                </M.BulkRow>
-              ))}
-            </M.BulkTableBody>
-
+            {/* 행 추가 버튼 */}
             {mode === "create" && (
               <M.AddRowButton type="button" onClick={addRow}>
                 <Plus size={14} /> 행 추가하기 (다음{" "}
@@ -540,6 +533,7 @@ export default function AssetFormModal({
   );
 }
 
+// ─────────────── [스타일 컴포넌트] ───────────────
 const DeviceTypeTabSelector = styled.div`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -548,6 +542,7 @@ const DeviceTypeTabSelector = styled.div`
   padding-bottom: 16px;
   border-bottom: 1px solid #e2e8f0;
 `;
+
 const TabButton = styled.button`
   display: flex;
   flex-direction: column;
@@ -561,10 +556,12 @@ const TabButton = styled.button`
   background: ${(props) => (props.active ? "#eff6ff" : "#fff")};
   color: ${(props) => (props.active ? "#2563eb" : "#64748b")};
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+
   div {
     font-size: 12px;
     font-weight: 700;
   }
+
   &:hover {
     border-color: #2563eb;
     color: #2563eb;

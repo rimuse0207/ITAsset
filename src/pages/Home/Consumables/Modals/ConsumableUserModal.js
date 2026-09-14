@@ -30,7 +30,6 @@ export default function ConsumableUserModal({
   useEffect(() => {
     if (isOpen) {
       if (mode === "edit" && targetHistory) {
-        console.log(targetHistory);
         setFormData({ ...targetHistory });
         setIsUnknownUser(!targetHistory.userCode);
       } else {
@@ -79,7 +78,7 @@ export default function ConsumableUserModal({
       finalData.name = "미지정 (부서 공용 등)";
       finalData.dept = "-";
     }
-    console.log(targetItem, "targetItem");
+
     if (
       mode === "create" &&
       finalData.issueCount > (Number(targetItem?.currentStock) || 0)

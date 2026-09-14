@@ -159,7 +159,6 @@ const HelpDeskMainContent = ({
       newLog,
     });
 
-    console.log(request);
     if (request.status) {
       const updatedTicket = {
         ...selectedTicket,

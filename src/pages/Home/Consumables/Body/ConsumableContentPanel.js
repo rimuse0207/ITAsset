@@ -279,15 +279,18 @@ const SectionAddButton = styled.button`
 const TableContainer = styled.div`
   border: 1px solid ${() => theme.colors.borderLight};
   border-radius: 12px;
-  overflow: hidden;
+  /* overflow: hidden; */
   box-shadow: ${() => theme.shadows.card};
   background: #fff;
+  max-height: 40vh;
+  overflow: auto;
 `;
 const PlaceholderTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
+
   th {
     background: ${() => theme.colors.bg};
     padding: 12px 16px;

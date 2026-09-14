@@ -31,7 +31,7 @@ export default function EveryOnePublicTicket() {
         const response = await Request_Get_Axios(
           `/HelpDesk/getPublicTicketDetail?token=${token}`,
         );
-        console.log(response);
+
         setTicketData(response.data);
         setIsLoading(false);
       } catch (error) {

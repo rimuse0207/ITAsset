@@ -120,7 +120,7 @@ export default function useConsumables() {
         name: InsertData.name,
         category: InsertData.category,
         itemType: InsertData.itemType,
-        currentStock: 12,
+        currentStock: 0,
         imageUrl: req.consumableImageURL,
       };
       setList(list.concat(newList));
@@ -176,7 +176,6 @@ export default function useConsumables() {
   };
 
   const updateIssue = async (payload) => {
-    console.log("지급 내역 수정 완료:", payload);
     const req = await updateConsumableUserUsed(payload);
     if (req) {
       await getUserUsedLists();
@@ -220,7 +219,6 @@ export default function useConsumables() {
   };
 
   const updatePurchase = async (multipartFormData) => {
-    console.log("입고 내역 수정 완료");
     const req = await updateStockPurchase(multipartFormData);
     if (req) {
       await getPurchaseLists();

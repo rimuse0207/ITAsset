@@ -56,7 +56,6 @@ const LicenseKey = ({ selectedVersion, onAction }) => {
           </EmptyBufferZone>
         ) : (
           selectedVersion.licenseKeys.map((keyObj, kIdx) => {
-            console.log(keyObj);
             const isThisKeyRevealed = keyObj.viewUnlocked === true;
 
             return (

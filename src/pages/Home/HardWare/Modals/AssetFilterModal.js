@@ -127,7 +127,6 @@ export default function AssetFilterModal({
               })}
             </M.ChipGroup>
           </M.FormSection>
-
           {/* Section 2: 자산 상태 */}
           <M.FormSection>
             <M.SectionLabel>
@@ -149,7 +148,6 @@ export default function AssetFilterModal({
               })}
             </M.ChipGroup>
           </M.FormSection>
-
           {/* Section 3: 입고/구매 범위 타임라인 서치 */}
           <M.FormSection>
             <M.SectionLabel>
@@ -203,25 +201,21 @@ export default function AssetFilterModal({
               </M.Grid>
             </M.FormSection>
           )}
-
-          {/* {formData.categories?.includes("IPHONE") && (
+          {/* 🚀 IPHONE 선택 시 IMEI 검색란 노출 */}
+          {formData.categories?.includes("IPHONE") && (
             <M.FormSection>
               <M.SectionLabel>
-                <Smartphone size={14} /> 모바일 단말 전용 통신망 분기
+                <Smartphone size={14} /> 모바일 단말 (iPhone) 일련번호/IMEI
               </M.SectionLabel>
-              <M.Select
-                name="telecom"
-                value={formData.telecom || "ALL"}
+              <M.Input
+                type="text"
+                name="imei"
+                placeholder="검색할 IMEI 또는 일련번호 입력..."
+                value={formData.imei || ""}
                 onChange={handleInputChange}
-              >
-                <option value="ALL">전체 통신사</option>
-                <option value="SKT">SKT 개통 단말</option>
-                <option value="KT">KT 개통 단말</option>
-                <option value="LGU+">LGU+ 개통 단말</option>
-              </M.Select>
+              />
             </M.FormSection>
-          )} */}
-
+          )}
           {formData.categories?.includes("MONITOR") && (
             <M.FormSection>
               <M.SectionLabel>

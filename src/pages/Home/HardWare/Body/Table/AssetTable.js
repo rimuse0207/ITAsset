@@ -77,7 +77,10 @@ const AssetTable = ({
                 <th style={{ width: "240px" }}>하드웨어 사양 (CPU/RAM/SSD)</th>
               )}
               {currentTypeFilter === "IPHONE" && (
-                <th style={{ width: "160px" }}>일련번호 (IMEI)</th>
+                <>
+                  <th style={{ width: "160px" }}>일련번호 (IMEI1)</th>
+                  <th style={{ width: "160px" }}>일련번호 (IMEI2)</th>
+                </>
               )}
               {currentTypeFilter === "IPHONE" && (
                 <th style={{ width: "120px" }}>연동 전화번호</th>
@@ -112,7 +115,12 @@ const AssetTable = ({
                     setSelectedAsset(asset);
                     setActiveTab("history");
                   }}
-                  onContextMenu={(e) => handleContextMenu(e, asset)}
+                  onContextMenu={(e) => {
+                    setSelectedAsset(asset);
+                    setActiveTab("history");
+
+                    handleContextMenu(e, asset);
+                  }}
                 >
                   <td className="code">
                     <Hash
@@ -161,7 +169,10 @@ const AssetTable = ({
                     </td>
                   )}
                   {currentTypeFilter === "IPHONE" && (
-                    <td className="imei-text">{asset.serial || "-"}</td>
+                    <>
+                      <td className="imei-text">{asset.imei1 || "-"}</td>
+                      <td className="imei-text">{asset.imei2 || "-"}</td>
+                    </>
                   )}
                   {currentTypeFilter === "IPHONE" && (
                     <td className="meta-text">{asset.phoneNumber || "-"}</td>
@@ -255,7 +266,8 @@ const TableContainer = styled.div`
   border-radius: 14px;
   border: 1px solid ${() => theme.colors.border};
   box-shadow: ${() => theme.shadows.soft};
-  overflow: hidden;
+  height: 65vh;
+  overflow: auto;
 `;
 const Table = styled.table`
   width: 100%;

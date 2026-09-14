@@ -284,7 +284,6 @@ const CreateTicketModal = ({ isOpen, onClose, onCreate }) => {
   };
 
   const handleChange = (e, selectInput = "select") => {
-    console.log(e);
     if (selectInput === "select") {
       const { name, value, label } = e.target;
       setFormData((prev) => ({ ...prev, [name]: label, [value]: value }));

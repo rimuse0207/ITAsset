@@ -65,7 +65,6 @@ export default function useAssetManagement(initialAssets = []) {
 
   // 3. 메뉴 액션 공통 처리기
   const handleMenuAction = async (action, asset) => {
-    console.log(action, asset);
     setContextMenu((prev) => ({ ...prev, visible: false }));
     if (asset) setSelectedAsset(asset);
 

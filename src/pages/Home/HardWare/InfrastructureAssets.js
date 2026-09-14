@@ -15,6 +15,7 @@ import AssetFilterModal from "./Modals/AssetFilterModal";
 import RepairHistoryModal from "./Modals/RepairHistoryModal";
 import UserAssignmentModal from "./Modals/UserAssignmentModal";
 import AssetStatusModal from "./Modals/AssetStatusModal";
+import ExcelUploadModal from "./Modals/ExcelUploadModal";
 
 export default function InfrastructureAssets() {
   const {
@@ -73,7 +74,7 @@ export default function InfrastructureAssets() {
           specCpu,
           minRam,
           monitorSize,
-          telecom,
+          imei, // 🚀 IMEI 필터 속성 추가
         } = advancedFilters;
 
         if (categories?.length > 0 && !categories.includes(asset.deviceType))
@@ -98,8 +99,16 @@ export default function InfrastructureAssets() {
           !asset.monitorSize?.toLowerCase().includes(monitorSize.toLowerCase())
         )
           return false;
-        if (telecom && telecom !== "ALL" && asset.telecom !== telecom)
-          return false;
+
+        // 🚀 IMEI / 일련번호 통합 검색 처리
+        if (imei) {
+          const targetImei = imei.toLowerCase();
+          const isMatch =
+            asset.serial?.toLowerCase().includes(targetImei) ||
+            asset.imei1?.toLowerCase().includes(targetImei) ||
+            asset.imei2?.toLowerCase().includes(targetImei);
+          if (!isMatch) return false;
+        }
       }
 
       return matchesSearch && matchesStatus;
@@ -127,6 +136,7 @@ export default function InfrastructureAssets() {
           openModal={() => openModal("FILTER")}
           hasAdvanced={!!advancedFilters}
           onResetAdvanced={() => setAdvancedFilters(null)}
+          processedAssets={processedAssets}
         />
 
         <AssetTable
@@ -210,6 +220,22 @@ export default function InfrastructureAssets() {
           closeModal();
         }}
       />
+
+      {activeModal === "EXCEL_UPLOAD" && (
+        <ExcelUploadModal
+          isOpen={true}
+          onClose={closeModal}
+          onSave={async (excelFormData) => {
+            // 서버로 엑셀 데이터 전송
+            // await uploadAssetExcelFetch(excelFormData);
+            console.log("전송할 엑셀 모드:", excelFormData.get("uploadMode"));
+            console.log("첨부된 파일 객체:", excelFormData.get("excelFile"));
+
+            await GettingAssetData(); // 업로드 성공 후 데이터 리프레시
+            closeModal();
+          }}
+        />
+      )}
     </Container>
   );
 }
