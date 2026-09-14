@@ -250,7 +250,7 @@ const Container = styled.div`
 `;
 const MainContent = styled.div`
   flex: 1;
-  padding: 40px;
+  padding: 24px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   max-width: ${(props) => (props.isPanelOpen ? "calc(100% - 540px)" : "100%")};
 `;
