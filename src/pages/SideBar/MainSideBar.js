@@ -8,6 +8,7 @@ import {
   LogOut,
   Terminal,
   ShoppingBasket,
+  CreditCard,
 } from "lucide-react";
 import { theme } from "../Home/Style/MainStyle";
 import { useNavigate } from "react-router-dom";
@@ -43,6 +44,12 @@ export default function MainSidebar({ currentMenu }) {
       label: "HelpDesk 이력 관리",
       path: "/helpdesk",
       icon: <Headphones size={18} />,
+    },
+    {
+      id: "subscription",
+      label: "구독/계약 업체 관리",
+      path: "/subscription",
+      icon: <CreditCard size={18} />,
     },
   ];
 
