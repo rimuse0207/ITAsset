@@ -1,17 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { theme } from "../../../Style/MainStyle";
 import styled from "styled-components";
 import { User, Hash, Layers, Smartphone, Tv, Laptop } from "lucide-react";
 
 const AssetTable = ({
-  assets, // 필터 가공 완료된 실 가동 리스트
-  rawMasterAssets, // 전체 통계 산출용 원본 원시 데이터셋
+  assets,
+  rawMasterAssets,
   selectedAsset,
   setSelectedAsset,
   handleContextMenu,
   setActiveTab,
 }) => {
   const [currentTypeFilter, setCurrentTypeFilter] = useState("ALL");
+
+  // 🚀 우클릭 컨텍스트 메뉴 활성화 여부 (스크롤 잠금 제어용)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // 테이블 스크롤 박스 ref
+  const tableContainerRef = useRef(null);
 
   const counts = {
     ALL: rawMasterAssets.length,
@@ -24,6 +30,97 @@ const AssetTable = ({
     if (currentTypeFilter === "ALL") return true;
     return asset.deviceType === currentTypeFilter;
   });
+
+  // 🚀 우클릭 메뉴가 열려있을 때 마우스 휠 스크롤 원천 차단 및 외부 클릭 시 잠금 해제
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const containerEl = tableContainerRef.current;
+
+    // 1) 마우스 휠 및 터치 스크롤 이벤트 강제 차단
+    const preventScroll = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    // 2) 좌클릭(메뉴 선택 또는 외부 클릭) 시 스크롤 잠금 즉시 해제
+    const unlockScroll = () => {
+      setIsMenuOpen(false);
+    };
+
+    // 3) ESC 키 입력 시 스크롤 잠금 해제
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" || e.key === "ArrowUp" || e.key === "ArrowDown") {
+        if (e.key === "Escape") setIsMenuOpen(false);
+        else e.preventDefault(); // 방향키로 테이블 스크롤되는 것도 방지
+      }
+    };
+
+    if (containerEl) {
+      containerEl.addEventListener("wheel", preventScroll, { passive: false });
+      containerEl.addEventListener("touchmove", preventScroll, {
+        passive: false,
+      });
+    }
+    window.addEventListener("click", unlockScroll);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      if (containerEl) {
+        containerEl.removeEventListener("wheel", preventScroll);
+        containerEl.removeEventListener("touchmove", preventScroll);
+      }
+      window.removeEventListener("click", unlockScroll);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  // 우클릭 시 하단 잘림 방지 + 스크롤 잠금 활성화
+  const handleSafeContextMenu = (e, asset) => {
+    e.preventDefault();
+    setSelectedAsset(asset);
+    setActiveTab("history");
+
+    // 🚀 우클릭 즉시 스크롤 잠금 활성화!
+    setIsMenuOpen(true);
+
+    const MENU_HEIGHT = 230;
+    const MENU_WIDTH = 200;
+
+    const containerRect = tableContainerRef.current?.getBoundingClientRect();
+    const bottomLimit = containerRect
+      ? Math.min(containerRect.bottom, window.innerHeight)
+      : window.innerHeight;
+
+    const rightLimit = containerRect
+      ? Math.min(containerRect.right, window.innerWidth)
+      : window.innerWidth;
+
+    let offsetY = 0;
+    let offsetX = 0;
+
+    if (e.clientY + MENU_HEIGHT > bottomLimit) {
+      offsetY = -MENU_HEIGHT;
+    }
+
+    if (e.clientX + MENU_WIDTH > rightLimit) {
+      offsetX = -MENU_WIDTH;
+    }
+
+    const customEvent = Object.create(e);
+    Object.defineProperties(customEvent, {
+      clientX: { value: e.clientX + offsetX },
+      clientY: { value: e.clientY + offsetY },
+      pageX: { value: e.pageX + offsetX },
+      pageY: { value: e.pageY + offsetY },
+      screenX: { value: e.screenX + offsetX },
+      screenY: { value: e.screenY + offsetY },
+      preventDefault: { value: () => e.preventDefault() },
+      stopPropagation: { value: () => e.stopPropagation() },
+    });
+
+    handleContextMenu(customEvent, asset);
+  };
 
   return (
     <TableWrapperZone>
@@ -60,8 +157,8 @@ const AssetTable = ({
         </TabItem>
       </FilterTabSegmentBar>
 
-      {/* 📝 2. 동적 컬럼 바인딩 테이블 */}
-      <TableContainer>
+      {/* 🚀 isLocked={isMenuOpen} 전달로 스크롤바 조작까지 차단 */}
+      <TableContainer ref={tableContainerRef} isLocked={isMenuOpen}>
         <Table>
           <thead>
             <tr>
@@ -115,12 +212,7 @@ const AssetTable = ({
                     setSelectedAsset(asset);
                     setActiveTab("history");
                   }}
-                  onContextMenu={(e) => {
-                    setSelectedAsset(asset);
-                    setActiveTab("history");
-
-                    handleContextMenu(e, asset);
-                  }}
+                  onContextMenu={(e) => handleSafeContextMenu(e, asset)}
                 >
                   <td className="code">
                     <Hash
@@ -150,7 +242,6 @@ const AssetTable = ({
                     </div>
                   </td>
 
-                  {/* 기종 분류 사양 스위칭 표출부 */}
                   {currentTypeFilter === "ALL" && (
                     <td className="meta-text">{asset.category}</td>
                   )}
@@ -267,12 +358,16 @@ const TableContainer = styled.div`
   border: 1px solid ${() => theme.colors.border};
   box-shadow: ${() => theme.shadows.soft};
   height: 65vh;
-  overflow: auto;
+  /* 🚀 우클릭 메뉴가 열려있을 때는 hidden으로 잠그고, 닫히면 auto로 복원 */
+  overflow: ${(props) => (props.isLocked ? "hidden" : "auto")};
 `;
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     background: #f8fafc;
     padding: 14px 20px;
     font-size: 12.5px;

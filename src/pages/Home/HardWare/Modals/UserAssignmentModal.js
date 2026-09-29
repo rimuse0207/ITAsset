@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { UserPlus, Check, AlertCircle } from "lucide-react";
+import { UserPlus, Check, AlertCircle, ArrowRightLeft } from "lucide-react";
 import ModalLayout from "./public/ModalLayout";
 import * as M from "./public/ModalStyle";
 import useModalForm from "../../../../hooks/InfrastructureAsset/Modal/useModalForm";
@@ -23,14 +23,14 @@ export default function UserAssignmentModal({
     targetAsset.user !== "재고" &&
     targetAsset.user !== "-";
 
-  // 폼 초기 상태 (기록용 메모 필드 `assignmentMemo` 확보)
+  // 폼 초기 상태
   const initialFormState = {
     beforeUser: targetAsset?.user || "",
     newUser: "",
     reason: hasCurrentHolder ? "퇴사로 인한 회수" : "신규 지급",
     assignmentDate: new Date().toISOString().split("T")[0],
     nowStatus: targetAsset?.status,
-    assignmentMemo: "", // 🚀 신규 추가: 발령 상세 메모 상태값
+    assignmentMemo: "",
   };
 
   const {
@@ -56,16 +56,34 @@ export default function UserAssignmentModal({
         newUser: "",
         reason: hasCurrentHolder ? "퇴사로 인한 회수" : "신규 지급",
         assignmentDate: new Date().toISOString().split("T")[0],
-        nowStatus: targetAsset.status,
-        assignmentMemo: "", // 오픈할 때마다 깔끔하게 비워두기
+        nowStatus: targetAsset?.status,
+        assignmentMemo: "",
       });
     }
-  }, [isOpen, targetAsset]);
+  }, [isOpen, targetAsset, hasCurrentHolder, setFormData]);
 
-  // 현재 기기 유무 상태에 맞춰 이원화된 가용한 사유 목록
+  // 🚀 현재 기기 소유자 유무에 따른 사유 목록 ('사용자 간 이관' 추가)
   const availableReasons = hasCurrentHolder
-    ? ["퇴사로 인한 회수", "노후화로 인한 회수"]
+    ? ["퇴사로 인한 회수", "노후화로 인한 회수", "사용자 간 이관"]
     : ["신규 지급"];
+
+  // 현재 선택된 사유 판별 플래그
+  const isReturnMode = formData.reason.includes("회수");
+  const isTransferMode = formData.reason.includes("이관");
+
+  // 사유 변경 시 newUser 초기화 핸들러
+  const handleReasonSelect = (selectedReason) => {
+    setFormData((prev) => ({
+      ...prev,
+      reason: selectedReason,
+      newUser: "", // 사유 전환 시 선택했던 대상자 초기화
+    }));
+  };
+
+  // 이관 시 현재 소유자 본인은 목록에서 제외하여 중복 선택 방지
+  const filteredUserOptions = selectUserOption.filter(
+    (opt) => opt.value !== formData.beforeUser,
+  );
 
   // react-select 스타일셋
   const selectCustomStyles = {
@@ -100,11 +118,17 @@ export default function UserAssignmentModal({
 
   const titleZone = (
     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-      <UserPlus size={18} style={{ color: "#2563eb" }} />
+      {isTransferMode ? (
+        <ArrowRightLeft size={18} style={{ color: "#2563eb" }} />
+      ) : (
+        <UserPlus size={18} style={{ color: "#2563eb" }} />
+      )}
       <div>
-        <h2 style={{ fontSize: "16px", fontWeight: "700" }}>
+        <h2 style={{ fontSize: "16px", fontWeight: "700", margin: 0 }}>
           {hasCurrentHolder
-            ? "자산 반납 및 창고 회수 처리"
+            ? isTransferMode
+              ? "자산 소유자 직접 이관 처리"
+              : "자산 반납 및 창고 회수 처리"
             : "자산 신규 불출 및 지급"}
         </h2>
         <p
@@ -113,6 +137,7 @@ export default function UserAssignmentModal({
             color: "#2563eb",
             fontFamily: "monospace",
             fontWeight: "700",
+            margin: "2px 0 0 0",
           }}
         >
           {targetAsset?.id} · {targetAsset?.name}
@@ -124,19 +149,29 @@ export default function UserAssignmentModal({
   return (
     <ModalLayout isOpen={isOpen} onClose={onClose} titleZone={titleZone}>
       <M.StyledForm
-        onSubmit={(e) =>
+        onSubmit={(e) => {
+          // 지급 또는 이관 모드일 때 대상자 미선택 방어
+          if (!isReturnMode && !formData.newUser) {
+            e.preventDefault();
+            return alert(
+              isTransferMode
+                ? "자산을 이관받을 대상자를 선택해주세요."
+                : "자산을 신규 지급할 대상자를 선택해주세요.",
+            );
+          }
+
           handleSubmit(e, (form) => ({
             assetId: targetAsset.id,
             previousUser: targetAsset.user,
             ...form,
-            newUser: form.reason.includes("회수") ? "-" : form.newUser,
-            nextStatus: form.reason.includes("회수") ? "재고" : "사용중",
-            actionType: "USER_CHANGE", // 통합 오디트 로그 대분류 명시
-          }))
-        }
+            newUser: isReturnMode ? "-" : form.newUser,
+            nextStatus: isReturnMode ? "재고" : "사용중",
+            actionType: isTransferMode ? "USER_TRANSFER" : "USER_CHANGE",
+          }));
+        }}
       >
         <M.ModalBody style={{ overflow: "visible" }}>
-          {/* 1. 상황별 최적화 사유 선택 칩 그룹 */}
+          {/* 1. 상황별 사유 선택 칩 그룹 */}
           <M.FormSection>
             <M.SectionLabel>변경 사유 선택</M.SectionLabel>
             <M.ChipGroup>
@@ -145,8 +180,11 @@ export default function UserAssignmentModal({
                   key={reason}
                   type="button"
                   selected={formData.reason === reason}
-                  onClick={() => handleDirectChange("reason", reason)}
+                  onClick={() => handleReasonSelect(reason)}
                 >
+                  {reason === "사용자 간 이관" && (
+                    <ArrowRightLeft size={12} style={{ marginRight: "4px" }} />
+                  )}
                   {reason}
                 </M.FilterChip>
               ))}
@@ -155,7 +193,11 @@ export default function UserAssignmentModal({
 
           {/* 2. 소유 임직원 매핑 레이어 */}
           <M.FormSection style={{ overflow: "visible", marginTop: "16px" }}>
-            <M.SectionLabel>현재 장비 소유자</M.SectionLabel>
+            <M.SectionLabel>
+              {isTransferMode
+                ? "이관 전 장비 소유자 (인계자)"
+                : "현재 장비 소유자"}
+            </M.SectionLabel>
             <div
               style={{
                 overflow: "visible",
@@ -180,8 +222,8 @@ export default function UserAssignmentModal({
               />
             </div>
 
-            {/* ─── 🚀 사유 기반 컨텍스트 분기 구역 ─── */}
-            {formData.reason.includes("회수") ? (
+            {/* ─── 🚀 사유 기반 컨텍스트 분기 구역 (회수 vs 지급/이관) ─── */}
+            {isReturnMode ? (
               <InfoBannerZone>
                 <AlertCircle size={15} />
                 <div className="banner-txt">
@@ -192,19 +234,37 @@ export default function UserAssignmentModal({
               </InfoBannerZone>
             ) : (
               <>
+                {isTransferMode && (
+                  <TransferGuideBanner>
+                    <ArrowRightLeft size={15} />
+                    <div className="banner-txt">
+                      <strong>[직접 이관 안내]</strong> 창고 입고(재고) 절차를
+                      거치지 않고 기존 소유자에서{" "}
+                      <strong>신규 인수자에게 즉시 소유권이 이전</strong>되며,
+                      기기 상태는 <strong>'사용중'</strong>으로 유지됩니다.
+                    </div>
+                  </TransferGuideBanner>
+                )}
+
                 <M.SectionLabel>
-                  변경 적용 대상자 (신규 소유자){" "}
+                  {isTransferMode
+                    ? "이관 대상자 선택 (인수자)"
+                    : "변경 적용 대상자 (신규 소유자)"}{" "}
                   <span className="required">*</span>
                 </M.SectionLabel>
                 <div style={{ overflow: "visible", position: "relative" }}>
                   <Select
                     styles={selectCustomStyles}
-                    options={selectUserOption}
-                    placeholder="검색을 통해 새롭게 자산을 불출할 사원을 선택하세요..."
+                    options={filteredUserOptions}
+                    placeholder={
+                      isTransferMode
+                        ? "장비를 인계받을 이관 대상 사원을 검색하여 선택하세요..."
+                        : "검색을 통해 새롭게 자산을 불출할 사원을 선택하세요..."
+                    }
                     isClearable={true}
                     value={
                       formData.newUser
-                        ? selectUserOption.find(
+                        ? filteredUserOptions.find(
                             (opt) => opt.value === formData.newUser,
                           )
                         : null
@@ -224,12 +284,14 @@ export default function UserAssignmentModal({
             )}
           </M.FormSection>
 
-          {/* 🚀 3. [신규 구역]: 지급/회수 상세 코멘트 및 비고 기록란 */}
+          {/* 3. 지급/회수/이관 상세 코멘트 및 비고 기록란 */}
           <M.FormSection style={{ marginTop: "16px" }}>
             <M.SectionLabel>
-              {formData.reason.includes("회수")
+              {isReturnMode
                 ? "회수 및 반납 상세 메모"
-                : "지급 및 불출 상세 메모"}{" "}
+                : isTransferMode
+                  ? "사용자 간 이관 상세 메모"
+                  : "지급 및 불출 상세 메모"}{" "}
               <span className="required">*</span>
             </M.SectionLabel>
             <M.TextArea
@@ -238,9 +300,11 @@ export default function UserAssignmentModal({
               value={formData.assignmentMemo}
               onChange={handleInputChange}
               placeholder={
-                formData.reason.includes("회수")
+                isReturnMode
                   ? "반납 기기의 외관 상태나 구체적인 회수 맥락을 기술하세요. (ex: 퇴사 처리 완 / 기기 노후화로 인한 창고 반납 입고)"
-                  : "지급 대상 임직원에게 불출하는 구체적 배경을 기술하세요. (ex: 26년 6월 공채 신규 입사자 지급 / 개발 업무용 고사양 장비 추가 지급)"
+                  : isTransferMode
+                    ? "장비를 직접 인계/인수하는 구체적인 사유를 기술하세요. (ex: 부서 내 업무 인수인계에 따른 장비 일괄 이관)"
+                    : "지급 대상 임직원에게 불출하는 구체적 배경을 기술하세요. (ex: 26년 공채 신규 입사자 지급 / 개발 업무용 고사양 장비 추가 지급)"
               }
               required
             />
@@ -249,7 +313,9 @@ export default function UserAssignmentModal({
           {/* 4. 변경 기준일 */}
           <M.Grid style={{ marginTop: "16px" }}>
             <M.InputGroup>
-              <M.SectionLabel>발령 및 변경 기준일</M.SectionLabel>
+              <M.SectionLabel>
+                {isTransferMode ? "이관 기준일" : "발령 및 변경 기준일"}
+              </M.SectionLabel>
               <M.Input
                 type="date"
                 name="assignmentDate"
@@ -266,7 +332,8 @@ export default function UserAssignmentModal({
             취소
           </M.CancelButton>
           <M.SubmitButton type="submit">
-            <Check size={16} /> 소유권 발령 적용
+            <Check size={16} />{" "}
+            {isTransferMode ? "자산 이관 확정" : "소유권 발령 적용"}
           </M.SubmitButton>
         </M.ModalFooter>
       </M.StyledForm>
@@ -290,6 +357,30 @@ const InfoBannerZone = styled.div`
   .banner-txt {
     font-size: 12.5px;
     color: #166534;
+    line-height: 1.4;
+    strong {
+      font-weight: 700;
+    }
+  }
+`;
+
+const TransferGuideBanner = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  svg {
+    color: #2563eb;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .banner-txt {
+    font-size: 12.5px;
+    color: #1e40af;
     line-height: 1.4;
     strong {
       font-weight: 700;
