@@ -24,7 +24,6 @@ import { useEffect } from "react";
 import Blockquote from "@tiptap/extension-blockquote";
 import Paragraph from "@tiptap/extension-paragraph";
 import axios from "axios";
-import { basicURL } from "./configs";
 
 // 1. 인용구(Blockquote) 인라인 스타일 적용 (기존 스타일 보존)
 const CustomBlockquote = Blockquote.extend({
@@ -276,7 +275,7 @@ export const useEditorCore = ({ content, onChange, placeholder }) => {
                   formData.append("file", file);
 
                   const response = await axios.post(
-                    `${basicURL}/API/ITInfra/EditorImage/upload`,
+                    `${process.env.REACT_APP_DB_HOST}/API/ITInfra/EditorImage/upload`,
                     formData,
                   );
 
@@ -324,7 +323,7 @@ export const useEditorCore = ({ content, onChange, placeholder }) => {
                 formData.append("file", file);
 
                 const response = await axios.post(
-                  `${basicURL}/API/ITInfra/EditorImage/upload`,
+                  `${process.env.REACT_APP_DB_HOST}/API/ITInfra/EditorImage/upload`,
                   formData,
                 );
 

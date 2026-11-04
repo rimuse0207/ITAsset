@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { COLOR_PALETTE } from "./utils/basicColor";
 import axios from "axios";
-import { basicURL } from "./configs/index";
 
 export const EditorToolbar = ({ editor }) => {
   const fileInputRef = useRef(null);
@@ -94,7 +93,7 @@ export const EditorToolbar = ({ editor }) => {
         formData.append("file", file);
 
         const response = await axios.post(
-          `${basicURL}/API/ITInfra/EditorImage/upload`,
+          `${process.env.REACT_APP_DB_HOST}/API/ITInfra/EditorImage/upload`,
           formData,
         );
 
