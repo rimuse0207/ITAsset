@@ -105,6 +105,7 @@ export default function MainSidebar({ currentMenu }) {
           onClick={() => {
             dispatch(Logout_Inistate_State_Func());
             localStorage.clear();
+            navigate("/");
           }}
         >
           <LogOut size={14} />
