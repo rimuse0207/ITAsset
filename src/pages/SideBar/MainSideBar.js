@@ -12,9 +12,11 @@ import {
 } from "lucide-react";
 import { theme } from "../Home/Style/MainStyle";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { Logout_Inistate_State_Func } from "../../Models/LoginInfoReducer/LoginInfoReduce";
 
 export default function MainSidebar({ currentMenu }) {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const LoginInfo = useSelector(
     (state) => state.Login_Info_Reducer_State.Login_Info,
@@ -99,7 +101,12 @@ export default function MainSidebar({ currentMenu }) {
           </SettingsButton>
         </AdminProfileCard>
 
-        <LogoutButton onClick={() => alert("로그아웃 처리가 요청되었습니다.")}>
+        <LogoutButton
+          onClick={() => {
+            dispatch(Logout_Inistate_State_Func());
+            localStorage.clear();
+          }}
+        >
           <LogOut size={14} />
           <span>콘솔 세션 종료</span>
         </LogoutButton>
